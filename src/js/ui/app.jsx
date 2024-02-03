@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 function EncryptButton({ cryptoWorker }) {
     const [result, setResult] = useState("");
-    let loaded = false;
+    const [workerLoaded, setWorkerLoaded] = useState(false);
 
     useEffect(() => {
         cryptoWorker.onmessage = e => {
@@ -12,17 +12,21 @@ function EncryptButton({ cryptoWorker }) {
                 deriveKeyResult(result);
             }
         }
-        loaded = true;
+        setWorkerLoaded(true);
     }, []);
 
     function deriveKey() {
         setResult("Loading...");
-        if (loaded) {
-            const message = {
-                type: "scrypt",
-                args: ["hackme"],
-            };
-            cryptoWorker.postMessage(message);
+        const message = {
+            type: "scrypt",
+            args: ["hackme"],
+        };
+        sendMessage(message);
+    }
+
+    function sendMessage(msg) {
+        if (workerLoaded) {
+            cryptoWorker.postMessage(msg);
         }
     }
 
