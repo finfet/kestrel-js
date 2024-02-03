@@ -1,25 +1,29 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 
 function EncryptButton({ cryptoWorker }) {
     const [result, setResult] = useState("");
+    let loaded = false;
 
     useEffect(() => {
-        cryptoWorker.onmessage = (e) => {
+        cryptoWorker.onmessage = e => {
             const msgType = e.data.type;
             const result = e.data.result;
             if (msgType == "scrypt") {
                 deriveKeyResult(result);
             }
         }
-    }, [cryptoWorker]);
+        loaded = true;
+    }, []);
 
     function deriveKey() {
         setResult("Loading...");
-        const message = {
-            type: "scrypt",
-            args: ["hackme"],
-        };
-        cryptoWorker.postMessage(message);
+        if (loaded) {
+            const message = {
+                type: "scrypt",
+                args: ["hackme"],
+            };
+            cryptoWorker.postMessage(message);
+        }
     }
 
     function deriveKeyResult(keyData) {
@@ -28,14 +32,26 @@ function EncryptButton({ cryptoWorker }) {
 
     return (
         <div>
-            <button onClick={() => deriveKey()}>Encrypt</button>
+            <button onClick={deriveKey}>Encrypt</button>
             <span style={{paddingLeft: 0.5 + 'rem'}}>{result}</span>
         </div>
     )
 }
 
 export default function App() {
-    const cryptoWorker = useMemo(() => new Worker("worker.bundle.js"), []);
+    const [cryptoWorker, setCryptoWorker] = useState(null);
+
+    useEffect(() => {
+        const worker = new Worker("worker.bundle.js");
+        setCryptoWorker(worker);
+        return () => {
+            cryptoWorker.terminate();
+        }
+    }, []);
+
+    if (!cryptoWorker) {
+        return <div>Initializing...</div>
+    }
 
     return (
         <div>
