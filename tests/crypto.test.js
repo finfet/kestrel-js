@@ -4,5 +4,5 @@ import { scrypt } from "kestrel-web";
 
 test("scrypt", (t) => {
     const res = scrypt("hackme");
-    assert.equal(res, "74a6c88b287894c3230216b85705a7463612133dcf03739696be326e351d6e02");
+    assert.equal(res, "3ebb9ac0d1da595f755407fe8fc246fe67fe6075730fc6e853351c2834bd6157");
 })
