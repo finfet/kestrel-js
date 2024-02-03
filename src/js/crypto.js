@@ -7,5 +7,3 @@ export function scrypt(password) {
     let key = deriveKey(passBytes, salt, 32768, 8, 1, 32);
     return encode(key, true);
 }
-
-
