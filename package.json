@@ -1,0 +1,38 @@
+{
+    "name": "kestrel-web",
+    "version": "0.1.0",
+    "description": "Kestrel web application",
+    "exports": "./src/js/crypto.js",
+    "type": "module",
+    "scripts": {
+        "build": "rollup -c",
+        "dev": "rollup -c -w",
+        "test": "node --test tests"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://githbub.com/finfet/kestrel-web"
+    },
+    "keywords": [
+        "encryption",
+        "security",
+        "privacy",
+        "file"
+    ],
+    "author": "Kyle Schreiber <kyle@80x24.net>",
+    "license": "MIT",
+    "dependencies": {
+        "@stablelib/hex": "^1.0.1",
+        "@stablelib/scrypt": "^1.0.3",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
+    },
+    "devDependencies": {
+        "@babel/preset-react": "^7.23.3",
+        "@rollup/plugin-babel": "^6.0.4",
+        "@rollup/plugin-commonjs": "^25.0.7",
+        "@rollup/plugin-node-resolve": "^15.2.3",
+        "@rollup/plugin-replace": "^5.0.5",
+        "rollup": "^4.9.6"
+    }
+}
