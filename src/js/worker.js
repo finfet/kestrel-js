@@ -1,4 +1,4 @@
-import { scrypt } from "./crypto"
+import { scrypt } from "./crypto";
 
 self.onmessage = (e) => {
     let msgType = e.data.type;
@@ -8,6 +8,8 @@ self.onmessage = (e) => {
         case "scrypt":
             runScrypt(msgType, args);
             break;
+        case "syn":
+            self.postMessage({ type: "ack", result: true });
         default:
             break;
     }

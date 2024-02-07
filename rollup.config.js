@@ -5,7 +5,7 @@ import babel from "@rollup/plugin-babel";
 
 export default [
     {
-        input: "src/js/ui/index.jsx",
+        input: "src/js/ui/index.js",
         output: {
             file: "dist/app.bundle.js",
             format: "es",
@@ -19,7 +19,7 @@ export default [
             commonjs({
                 include: ["node_modules/**"],
             }),
-            resolve({ extensions: [".js", ".jsx"]}),
+            resolve(),
             babel({
                 exclude: "node_modules/**",
                 babelHelpers: "bundled",

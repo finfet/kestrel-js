@@ -6,32 +6,35 @@ function EncryptButton({ cryptoWorker }) {
 
     useEffect(() => {
         cryptoWorker.onmessage = e => {
-            const msgType = e.data.type;
-            const result = e.data.result;
-            if (msgType == "scrypt") {
-                deriveKeyResult(result);
+            const msg = e.data;
+            if (msg.type == "scrypt") {
+                deriveKeyResult(msg.result);
+            } else if (msg.type == "ack") {
+                setWorkerLoaded(true);
             }
         }
-        setWorkerLoaded(true);
+        sendMessage("syn", []);
     }, []);
 
     function deriveKey() {
-        setResult("Loading...");
-        const message = {
-            type: "scrypt",
-            args: ["hackme"],
-        };
-        sendMessage(message);
+        setResult("Calculating...");
+        sendMessage("scrypt", ["hackme"]);
     }
 
-    function sendMessage(msg) {
-        if (workerLoaded) {
-            cryptoWorker.postMessage(msg);
+    function sendMessage(type, args) {
+        const msg = {
+            type: type,
+            args: args
         }
+        cryptoWorker.postMessage(msg);
     }
 
     function deriveKeyResult(keyData) {
         setResult(keyData);
+    }
+
+    if (!workerLoaded) {
+        return <button disabled>Encrypt</button>
     }
 
     return (
@@ -46,7 +49,7 @@ export default function App() {
     const [cryptoWorker, setCryptoWorker] = useState(null);
 
     useEffect(() => {
-        const worker = new Worker("worker.bundle.js");
+        const worker = new Worker("worker.bundle.js", { type: "module" });
         setCryptoWorker(worker);
         return () => {
             cryptoWorker.terminate();

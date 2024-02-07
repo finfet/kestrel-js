@@ -7,7 +7,7 @@
     "scripts": {
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "serve": "npx serve -p 8000 dist/",
+        "serve": "python3 -m http.server -d dist/",
         "test": "node --test tests"
     },
     "repository": {
