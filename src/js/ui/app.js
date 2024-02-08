@@ -9,11 +9,9 @@ function EncryptButton({ cryptoWorker }) {
             const msg = e.data;
             if (msg.type == "scrypt") {
                 deriveKeyResult(msg.result);
-            } else if (msg.type == "ack") {
-                setWorkerLoaded(true);
             }
         }
-        sendMessage("syn", []);
+        setWorkerLoaded(true);
     }, []);
 
     function deriveKey() {
@@ -47,16 +45,23 @@ function EncryptButton({ cryptoWorker }) {
 
 export default function App() {
     const [cryptoWorker, setCryptoWorker] = useState(null);
+    const [workerLoaded, setWorkerLoaded] = useState(false);
 
     useEffect(() => {
-        const worker = new Worker("worker.bundle.js", { type: "module" });
+        const worker = new Worker("worker.bundle.js");
+        worker.onmessage = e => {
+            let msg = e.data;
+            if (msg.type == "init") {
+                setWorkerLoaded(true);
+            }
+        }
         setCryptoWorker(worker);
         return () => {
             cryptoWorker.terminate();
         }
     }, []);
 
-    if (!cryptoWorker) {
+    if (!workerLoaded) {
         return <div>Initializing...</div>
     }
 

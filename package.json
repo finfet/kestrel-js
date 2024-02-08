@@ -7,7 +7,7 @@
     "scripts": {
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "serve": "python3 -m http.server -d dist/",
+        "serve": "serve -l 8000 dist/",
         "test": "node --test tests"
     },
     "repository": {
@@ -23,8 +23,6 @@
     "author": "Kyle Schreiber <kyle@80x24.net>",
     "license": "MIT",
     "dependencies": {
-        "@stablelib/hex": "^1.0.1",
-        "@stablelib/scrypt": "^1.0.3",
         "react": "^18.2.0",
         "react-dom": "^18.2.0"
     },
@@ -34,6 +32,7 @@
         "@rollup/plugin-commonjs": "^25.0.7",
         "@rollup/plugin-node-resolve": "^15.2.3",
         "@rollup/plugin-replace": "^5.0.5",
+        "libsodium-wrappers-sumo": "^0.7.13",
         "rollup": "^4.9.6",
         "serve": "^14.2.1"
     }

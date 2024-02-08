@@ -24,7 +24,7 @@ export default [
                 exclude: "node_modules/**",
                 babelHelpers: "bundled",
                 presets: [ ["@babel/preset-react", { runtime: "automatic" }]]
-            })
+            }),
         ]
     },
     {

@@ -1,5 +1,16 @@
 import { scrypt } from "./crypto";
 
+let libsodium = null;
+
+self.sodium = {
+    onload: function(sodium) {
+        libsodium = sodium;
+        self.postMessage({ type: "init", result: true });
+    }
+}
+
+self.importScripts("sodium.js");
+
 self.onmessage = (e) => {
     let msgType = e.data.type;
     let args = e.data.args;
@@ -8,15 +19,13 @@ self.onmessage = (e) => {
         case "scrypt":
             runScrypt(msgType, args);
             break;
-        case "syn":
-            self.postMessage({ type: "ack", result: true });
         default:
             break;
     }
 }
 
 function runScrypt(msgType, args) {
-    let result = scrypt(args[0]);
+    let result = scrypt(libsodium, args[0]);
     let message = {
         result: result,
         type: msgType
