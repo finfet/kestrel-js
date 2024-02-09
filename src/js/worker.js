@@ -1,16 +1,14 @@
 import { Crypto } from "./crypto/crypto";
 import { to_hex } from "./crypto/utils";
 
-let libsodium = null;
-
-self.sodium = {
-    onload: function(sodium) {
-        libsodium = sodium;
-        self.postMessage({ type: "init", result: true });
-    }
-}
-
 self.importScripts("sodium.js");
+
+let crypto = null;
+
+Crypto.createInstance(sodium).then((c) => {
+    crypto = c;
+    self.postMessage({ type: "init", result: true });
+});
 
 self.onmessage = (e) => {
     let msgType = e.data.type;
@@ -19,8 +17,7 @@ self.onmessage = (e) => {
     try {
         switch (msgType) {
             case "scrypt":
-                // runScrypt(args);
-                throw new Error("scrypt failed.");
+                runScrypt(args);
                 break;
             default:
                 break;
@@ -31,7 +28,6 @@ self.onmessage = (e) => {
 }
 
 function runScrypt(args) {
-    let crypto = new Crypto(libsodium);
     let result = crypto.scrypt(args[0], "yellowsubmarine.", 32768, 8, 1, 32);
     let message = {
         result: to_hex(result),

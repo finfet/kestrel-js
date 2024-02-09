@@ -2,10 +2,20 @@ export class Crypto {
     /**
      * Kestrel cryptographic functions
      * 
-     * @param {Object} sodium An already-initialized libsodium.js object 
+     * @param {Object} sodium An already-initialized libsodium.js object
      */
     constructor(sodium) {
         this.sodium = sodium;
+    }
+
+    /**
+     * Create an instance of the Crypto class
+     * @param {Object} sodium A libsodium.js object. Can be init or uninit
+     * @returns An instance of Crypto
+     */
+    static async createInstance(sodium) {
+        await sodium.ready;
+        return new Crypto(sodium);
     }
 
     /**
@@ -34,10 +44,9 @@ export class Crypto {
 
         return key;
     }
-}
 
-export function secure_random(len) {
-    let randBytes = new Uint8Array(len);
-    globalThis.crypto.getRandomValues(randBytes);
-    return randBytes;
+    secure_random(len) {
+        let randBytes = this.sodium.randombytes_buf(len);
+        return randBytes;
+    }
 }
