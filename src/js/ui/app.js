@@ -9,6 +9,8 @@ function EncryptButton({ cryptoWorker }) {
             const msg = e.data;
             if (msg.type == "scrypt") {
                 deriveKeyResult(msg.result);
+            } else if (msg.type == "exception") {
+                setResult(msg.result);
             }
         }
         setWorkerLoaded(true);

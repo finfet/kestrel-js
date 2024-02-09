@@ -1,4 +1,5 @@
-import { scrypt } from "./crypto";
+import { Crypto } from "./crypto/crypto";
+import { to_hex } from "./crypto/utils";
 
 let libsodium = null;
 
@@ -15,20 +16,26 @@ self.onmessage = (e) => {
     let msgType = e.data.type;
     let args = e.data.args;
 
-    switch (msgType) {
-        case "scrypt":
-            runScrypt(msgType, args);
-            break;
-        default:
-            break;
+    try {
+        switch (msgType) {
+            case "scrypt":
+                // runScrypt(args);
+                throw new Error("scrypt failed.");
+                break;
+            default:
+                break;
+        }
+    } catch (err) {
+        self.postMessage({ type: "exception", result: err.toString() });
     }
 }
 
-function runScrypt(msgType, args) {
-    let result = scrypt(libsodium, args[0]);
+function runScrypt(args) {
+    let crypto = new Crypto(libsodium);
+    let result = crypto.scrypt(args[0], "yellowsubmarine.", 32768, 8, 1, 32);
     let message = {
-        result: result,
-        type: msgType
+        result: to_hex(result),
+        type: "scrypt"
     };
     self.postMessage(message);
 }

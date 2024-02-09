@@ -2,7 +2,10 @@
     "name": "kestrel-web",
     "version": "0.1.0",
     "description": "Kestrel web application",
-    "exports": "./src/js/crypto.js",
+    "exports": {
+        ".": "./src/js/crypto/crypto.js",
+        "./utils": "./src/js/crypto/utils.js"
+    },
     "type": "module",
     "scripts": {
         "build": "rollup -c",
