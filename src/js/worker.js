@@ -23,7 +23,7 @@ self.onmessage = (e) => {
                 break;
         }
     } catch (err) {
-        self.postMessage({ type: "exception", result: err.toString() });
+        self.postMessage({ type: "exception", msgType: msgType, msg: err.toString() });
     }
 }
 

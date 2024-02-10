@@ -1,46 +1,10 @@
 import { useState, useEffect } from "react";
 
-function EncryptButton({ cryptoWorker }) {
-    const [result, setResult] = useState("");
-    const [workerLoaded, setWorkerLoaded] = useState(false);
-
-    useEffect(() => {
-        cryptoWorker.onmessage = e => {
-            const msg = e.data;
-            if (msg.type == "scrypt") {
-                deriveKeyResult(msg.result);
-            } else if (msg.type == "exception") {
-                setResult(msg.result);
-            }
-        }
-        setWorkerLoaded(true);
-    }, []);
-
-    function deriveKey() {
-        setResult("Calculating...");
-        sendMessage("scrypt", ["hackme"]);
-    }
-
-    function sendMessage(type, args) {
-        const msg = {
-            type: type,
-            args: args
-        }
-        cryptoWorker.postMessage(msg);
-    }
-
-    function deriveKeyResult(keyData) {
-        setResult(keyData);
-    }
-
-    if (!workerLoaded) {
-        return <button disabled>Encrypt</button>
-    }
-
+function EncryptButton({ deriveKey, keyResult }) {
     return (
         <div>
             <button onClick={deriveKey}>Encrypt</button>
-            <span style={{paddingLeft: 0.5 + 'rem'}}>{result}</span>
+            <span style={{paddingLeft: 0.5 + 'rem'}}>{keyResult}</span>
         </div>
     )
 }
@@ -48,6 +12,8 @@ function EncryptButton({ cryptoWorker }) {
 export default function App() {
     const [cryptoWorker, setCryptoWorker] = useState(null);
     const [workerLoaded, setWorkerLoaded] = useState(false);
+    const [keyResult, setKeyResult] = useState("");
+    const [hasError, setHasError] = useState(null);
 
     useEffect(() => {
         const worker = new Worker("worker.bundle.js");
@@ -55,6 +21,10 @@ export default function App() {
             let msg = e.data;
             if (msg.type == "init") {
                 setWorkerLoaded(true);
+            } else if (msg.type == "scrypt") {
+                deriveKeyResult(msg.result);
+            } else if (msg.type == "exception") {
+                processError(msg);
             }
         }
         setCryptoWorker(worker);
@@ -63,6 +33,31 @@ export default function App() {
         }
     }, []);
 
+    function deriveKey() {
+        setKeyResult("...");
+        sendMessage("scrypt", ["hackme"]);
+    }
+
+    function deriveKeyResult(key) {
+        setKeyResult(key);
+    }
+
+    function sendMessage(type, args) {
+        setHasError(null);
+        const msg = {
+            type: type,
+            args: args
+        };
+        cryptoWorker.postMessage(msg);
+    }
+
+    function processError(msg) {
+        if (msg.msgType == "scrypt") {
+            setKeyResult("");
+        }
+        setHasError({msgType: msg.msgType, msg: msg.msg});
+    }
+
     if (!workerLoaded) {
         return <div>Initializing...</div>
     }
@@ -70,7 +65,10 @@ export default function App() {
     return (
         <div>
             <h1>Kestrel</h1>
-            <EncryptButton cryptoWorker={cryptoWorker} />
+            <EncryptButton keyResult={keyResult} deriveKey={deriveKey} />
+            {hasError != null &&
+                <div class="error">{hasError.msg}</div>
+            }
         </div>
     )
 }
