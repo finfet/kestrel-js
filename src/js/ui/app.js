@@ -11,16 +11,19 @@ function EncryptButton({ deriveKey, keyResult }) {
 
 export default function App() {
     const [cryptoWorker, setCryptoWorker] = useState(null);
-    const [workerLoaded, setWorkerLoaded] = useState(false);
-    const [keyResult, setKeyResult] = useState("");
     const [hasError, setHasError] = useState(null);
+
+    const [workerLoading, setWorkerLoading] = useState(true);
+    const [minAnim, setMinAnim] = useState(false);
+
+    const [keyResult, setKeyResult] = useState("");
 
     useEffect(() => {
         const worker = new Worker("worker.bundle.js");
         worker.onmessage = e => {
             let msg = e.data;
             if (msg.type == "init") {
-                setWorkerLoaded(true);
+                setWorkerLoading(false);
             } else if (msg.type == "scrypt") {
                 deriveKeyResult(msg.result);
             } else if (msg.type == "exception") {
@@ -28,6 +31,9 @@ export default function App() {
             }
         }
         setCryptoWorker(worker);
+        setTimeout(() => {
+            setMinAnim(true);
+        }, 1000);
         return () => {
             cryptoWorker.terminate();
         }
@@ -58,8 +64,13 @@ export default function App() {
         setHasError({msgType: msg.msgType, msg: msg.msg});
     }
 
-    if (!workerLoaded) {
-        return <div>Initializing...</div>
+    if (workerLoading || !minAnim) {
+        return (
+            <div>
+                <h1>Kestrel</h1>
+                <div>Loading...</div>
+            </div>
+        )
     }
 
     return (
