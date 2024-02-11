@@ -1,10 +1,18 @@
 import { useState, useEffect } from "react";
 
-function EncryptButton({ deriveKey, keyResult }) {
+function EncryptButton({ deriveKey, keyResult, dkShowSpinner }) {
+    if (dkShowSpinner) {
+        return (
+            <div>
+                <button onClick={deriveKey} disabled>Encrypt</button>
+                <div className="spin-loader"></div>
+            </div>
+        )
+    }
     return (
         <div>
             <button onClick={deriveKey}>Encrypt</button>
-            <span style={{paddingLeft: 0.5 + 'rem'}}>{keyResult}</span>
+            <span style={{paddingLeft: 0.5 + "rem"}}>{keyResult}</span>
         </div>
     )
 }
@@ -14,9 +22,17 @@ export default function App() {
     const [hasError, setHasError] = useState(null);
 
     const [workerLoading, setWorkerLoading] = useState(true);
-    const [minAnim, setMinAnim] = useState(false);
+    const [animStart, setAnimStart] = useState(false);
+    const [animMet, setAnimMet] = useState(false);
+
+    const [deriveKeyLoading, setDeriveKeyLoading] = useState(false);
+    const [dkAnimStart, setDkAnimStart] = useState(false);
+    const [dkAnimMet, setDkAnimMet] = useState(false);
 
     const [keyResult, setKeyResult] = useState("");
+
+    const showSpinner = workerLoading || (animStart && !animMet);
+    const dkShowSpinner = deriveKeyLoading || (dkAnimStart && !dkAnimMet);
 
     useEffect(() => {
         const worker = new Worker("worker.bundle.js");
@@ -30,9 +46,14 @@ export default function App() {
                 processError(msg);
             }
         }
+        worker.onerror = e => {
+            processError({msgType: "exception", msg: "Worker communication failed."});
+        }
         setCryptoWorker(worker);
+        setAnimStart(true);
         setTimeout(() => {
-            setMinAnim(true);
+            setAnimMet(true);
+            setAnimStart(false);
         }, 1000);
         return () => {
             cryptoWorker.terminate();
@@ -40,11 +61,18 @@ export default function App() {
     }, []);
 
     function deriveKey() {
-        setKeyResult("...");
+        setDeriveKeyLoading(true);
+        setDkAnimStart(true);
+        setDkAnimMet(false);
+        setTimeout(() => {
+            setDkAnimStart(false);
+            setDkAnimMet(true);
+        }, 1000);
         sendMessage("scrypt", ["hackme"]);
     }
 
     function deriveKeyResult(key) {
+        setDeriveKeyLoading(false);
         setKeyResult(key);
     }
 
@@ -64,11 +92,24 @@ export default function App() {
         setHasError({msgType: msg.msgType, msg: msg.msg});
     }
 
-    if (workerLoading || !minAnim) {
+    if (hasError) {
         return (
             <div>
                 <h1>Kestrel</h1>
-                <div>Loading...</div>
+                <div className="error">Error: {hasError.msg}</div>
+            </div>
+        )
+    }
+
+    if (showSpinner) {
+        return (
+            <div>
+                <h1>Kestrel</h1>
+                <div className="bounce-loader">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
             </div>
         )
     }
@@ -76,9 +117,12 @@ export default function App() {
     return (
         <div>
             <h1>Kestrel</h1>
-            <EncryptButton keyResult={keyResult} deriveKey={deriveKey} />
+            <EncryptButton
+                keyResult={keyResult}
+                deriveKey={deriveKey}
+                dkShowSpinner={dkShowSpinner} />
             {hasError != null &&
-                <div class="error">{hasError.msg}</div>
+                <div className="error">{hasError.msg}</div>
             }
         </div>
     )
