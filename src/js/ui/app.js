@@ -1,11 +1,22 @@
 import { useState, useEffect } from "react";
 
+function DotLoader({ className }) {
+    return (
+        <div className={`dot-loader ${className}`}>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    )
+}
+
 function EncryptButton({ deriveKey, keyResult, dkShowSpinner }) {
     if (dkShowSpinner) {
         return (
             <div>
                 <button onClick={deriveKey} disabled>Encrypt</button>
-                <div className="spin-loader"></div>
+                <DotLoader className={"ml-1"} />
             </div>
         )
     }
@@ -105,11 +116,7 @@ export default function App() {
         return (
             <div>
                 <h1>Kestrel</h1>
-                <div className="bounce-loader">
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                </div>
+                <DotLoader />
             </div>
         )
     }
