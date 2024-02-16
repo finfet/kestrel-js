@@ -1,14 +1,14 @@
-import { Crypto } from "./crypto/crypto";
-import { to_hex } from "./crypto/utils";
+import { Crypto, Utils } from "kestrel-crypto";
 
-self.importScripts("sodium.js");
 
 let crypto = null;
 
-Crypto.createInstance(sodium).then((c) => {
-    crypto = c;
-    self.postMessage({ type: "init", result: true });
-});
+function start() {
+    Crypto.createInstance().then((c) => {
+        crypto = c;
+        self.postMessage({ type: "init", result: true });
+    });
+}
 
 self.onmessage = (e) => {
     let msgType = e.data.type;
@@ -28,10 +28,12 @@ self.onmessage = (e) => {
 }
 
 function runScrypt(args) {
-    let result = crypto.scrypt(args[0], "yellowsubmarine.", 32768, 8, 1, 32);
+    let result = crypto.scrypt(Utils.toUtf8Bytes(args[0]), Utils.toUtf8Bytes("yellowsubmarine."), 32768, 8, 1, 32);
     let message = {
-        result: to_hex(result),
+        result: Utils.toHex(result),
         type: "scrypt"
     };
     self.postMessage(message);
 }
+
+start();

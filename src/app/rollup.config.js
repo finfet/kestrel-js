@@ -5,11 +5,11 @@ import babel from "@rollup/plugin-babel";
 
 export default [
     {
-        input: "src/js/ui/index.js",
+        input: "src/js/index.js",
         output: {
             file: "dist/app.bundle.js",
             format: "es",
-            sourcemap: true,
+            sourcemap: true
         },
         plugins: [
             replace({
@@ -17,14 +17,14 @@ export default [
                 preventAssignment: true
             }),
             commonjs({
-                include: ["node_modules/**"],
+                include: ["**/node_modules/**"],
             }),
-            resolve(),
             babel({
-                exclude: "node_modules/**",
+                exclude: "**/node_modules/**",
                 babelHelpers: "bundled",
                 presets: [ ["@babel/preset-react", { runtime: "automatic" }]]
             }),
+            resolve()
         ]
     },
     {
@@ -35,10 +35,7 @@ export default [
             sourcemap: true
         },
         plugins: [
-            commonjs({
-                include: ["node_modules/**"],
-            }),
-            resolve(),
+            resolve()
         ]
     }
 ]

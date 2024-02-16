@@ -1,0 +1,28 @@
+{
+    "name": "kestrel-crypto",
+    "version": "0.1.0",
+    "description": "Kestrel crypto library",
+    "type": "module",
+    "private": true,
+    "exports": {
+        ".": "./dist/kestrel-crypto.bundle.js"
+    },
+    "scripts": {
+        "build": "rollup -c",
+        "dev": "rollup -c -w",
+        "test": "node --test tests"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://githbub.com/finfet/kestrel-js"
+    },
+    "keywords": [
+        "encryption"
+    ],
+    "author": "Kyle Schreiber <kyle@80x24.net>",
+    "license": "MIT",
+    "devDependencies": {
+        "@rollup/plugin-wasm": "^6.2.2",
+        "rollup": "^4.9.6"
+    }
+}

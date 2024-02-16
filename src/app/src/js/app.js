@@ -46,7 +46,7 @@ export default function App() {
     const dkShowSpinner = deriveKeyLoading || (dkAnimStart && !dkAnimMet);
 
     useEffect(() => {
-        const worker = new Worker("worker.bundle.js");
+        const worker = new Worker("worker.bundle.js", { type: "module" });
         worker.onmessage = e => {
             let msg = e.data;
             if (msg.type == "init") {
@@ -67,7 +67,9 @@ export default function App() {
             setAnimStart(false);
         }, 1000);
         return () => {
-            cryptoWorker.terminate();
+            if (cryptoWorker) {
+                cryptoWorker.terminate();
+            }
         }
     }, []);
 
