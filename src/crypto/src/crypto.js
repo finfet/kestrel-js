@@ -31,17 +31,25 @@ export class Crypto {
      * @return {Uint8Array} The derived key
      */
     scrypt(password, salt, n, r, p, key_len) {
-        if (typeof(password) == String) {
-            password = new TextEncoder().encode(password);
-        }
-
-        if (typeof(salt) == String) {
-            salt = new TextEncoder().encode(salt);
-        }
-
         let key = kcrypto.scrypt(password, salt, n, r, p, key_len);
 
         return key;
+    }
+
+    chapolyEncrypt(key, nonce, plaintext, aad) {
+        let ciphertext = kcrypto.chapoly_encrypt_ietf(key, nonce, plaintext, aad);
+        return ciphertext;
+    }
+
+    chapolyDecrypt(key, nonce, ciphertext, aad) {
+        let plaintext;
+        try {
+            plaintext = kcrypto.chapoly_decrypt_ietf(key, nonce, ciphertext, aad);
+        } catch (err) {
+            throw new Error("Decrypt failed");
+        }
+
+        return plaintext;
     }
 }
 
@@ -74,7 +82,7 @@ export class Utils {
             bytes[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
         }
 
-        return uint8Array;
+        return bytes;
     }
 
     static toUtf8Bytes(str) {

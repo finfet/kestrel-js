@@ -19,3 +19,15 @@ test("secureRandom", () => {
     const bytes = secureRandom(32);
     assert.equal(bytes.length, 32);
 });
+
+test("decrypt", () => {
+    const plaintext = Utils.toUtf8Bytes("Hello, World!");
+    const salt = Utils.toUtf8Bytes("yellowsubmarine.");
+    const nonce = Utils.fromHex("b21237d55cce2711e789db3b");
+    const aad = new Uint8Array(0);
+    const key = Utils.fromHex("c962976520fdd153aaa18cc33e7a4b5b9ed80c863a20932aff22632973edf33c");
+    const ciphertext = crypto.chapolyEncrypt(key, nonce, plaintext, aad);
+    const plaintext2 = crypto.chapolyDecrypt(key, nonce, ciphertext, aad);
+
+    assert.deepEqual(plaintext2, plaintext);
+});
