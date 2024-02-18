@@ -5,7 +5,8 @@
     "type": "module",
     "private": true,
     "exports": {
-        ".": "./dist/kestrel-crypto.bundle.js"
+        ".": "./dist/kestrel-crypto.bundle.js",
+        "./utils": "./src/utils.js"
     },
     "scripts": {
         "build": "rollup -c",

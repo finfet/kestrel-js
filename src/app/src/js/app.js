@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toUtf8Bytes } from "kestrel-crypto/utils";
 
 function DotLoader({ className }) {
     return (
@@ -11,7 +12,29 @@ function DotLoader({ className }) {
     )
 }
 
-function EncryptButton({ deriveKey, keyResult, dkShowSpinner }) {
+function EncryptButton({ sendMessage }) {
+    const [deriveKeyLoading, setDeriveKeyLoading] = useState(false);
+    const [dkAnimStart, setDkAnimStart] = useState(false);
+    const [dkAnimMet, setDkAnimMet] = useState(false);
+
+    const [keyResult, setKeyResult] = useState("");
+    const dkShowSpinner = deriveKeyLoading || (dkAnimStart && !dkAnimMet);
+
+    function deriveKey() {
+        setDeriveKeyLoading(true);
+        setDkAnimStart(true);
+        setDkAnimMet(false);
+        setTimeout(() => {
+            setDkAnimStart(false);
+            setDkAnimMet(true);
+        }, 200);
+        sendMessage("scrypt", [toUtf8Bytes("hackme")], msg => {
+            let key = msg.result;
+            setDeriveKeyLoading(false);
+            setKeyResult(key);
+        });
+    }
+
     if (dkShowSpinner) {
         return (
             <div>
@@ -31,19 +54,14 @@ function EncryptButton({ deriveKey, keyResult, dkShowSpinner }) {
 export default function App() {
     const [cryptoWorker, setCryptoWorker] = useState(null);
     const [hasError, setHasError] = useState(null);
+    const [messageId, setMessageId] = useState(0);
+    const [messageCallbacks, setMessageCallbacks] = useState(new Map());
 
     const [workerLoading, setWorkerLoading] = useState(true);
     const [animStart, setAnimStart] = useState(false);
     const [animMet, setAnimMet] = useState(false);
 
-    const [deriveKeyLoading, setDeriveKeyLoading] = useState(false);
-    const [dkAnimStart, setDkAnimStart] = useState(false);
-    const [dkAnimMet, setDkAnimMet] = useState(false);
-
-    const [keyResult, setKeyResult] = useState("");
-
     const showSpinner = workerLoading || (animStart && !animMet);
-    const dkShowSpinner = deriveKeyLoading || (dkAnimStart && !dkAnimMet);
 
     useEffect(() => {
         const worker = new Worker("worker.bundle.js", { type: "module" });
@@ -51,21 +69,30 @@ export default function App() {
             let msg = e.data;
             if (msg.type == "init") {
                 setWorkerLoading(false);
-            } else if (msg.type == "scrypt") {
-                deriveKeyResult(msg.result);
             } else if (msg.type == "exception") {
                 processError(msg);
+            } else {
+                let callback = messageCallbacks.get(msg.id);
+                setMessageCallbacks(prev => prev.delete(msg.id));
+                callback(msg);
             }
         }
         worker.onerror = e => {
-            processError({msgType: "exception", msg: "Worker communication failed."});
+            const msg = {
+                id: 0,
+                type: "exception",
+                result: {
+                    type: "worker-onerror", msg: "Worker communication failed."
+                }
+            };
+            processError(msg);
         }
         setCryptoWorker(worker);
         setAnimStart(true);
         setTimeout(() => {
             setAnimMet(true);
             setAnimStart(false);
-        }, 1000);
+        }, 200);
         return () => {
             if (cryptoWorker) {
                 cryptoWorker.terminate();
@@ -73,43 +100,29 @@ export default function App() {
         }
     }, []);
 
-    function deriveKey() {
-        setDeriveKeyLoading(true);
-        setDkAnimStart(true);
-        setDkAnimMet(false);
-        setTimeout(() => {
-            setDkAnimStart(false);
-            setDkAnimMet(true);
-        }, 1000);
-        sendMessage("scrypt", ["hackme"]);
-    }
-
-    function deriveKeyResult(key) {
-        setDeriveKeyLoading(false);
-        setKeyResult(key);
-    }
-
-    function sendMessage(type, args) {
+    function sendMessage(type, args, callback) {
         setHasError(null);
+        const id = messageId + 1;
         const msg = {
+            id: id,
             type: type,
             args: args
         };
+        setMessageId(id);
+        setMessageCallbacks(prev => prev.set(id, callback));
         cryptoWorker.postMessage(msg);
     }
 
     function processError(msg) {
-        if (msg.msgType == "scrypt") {
-            setKeyResult("");
-        }
-        setHasError({msgType: msg.msgType, msg: msg.msg});
+        let result = msg.result;
+        setHasError(result);
     }
 
     if (hasError) {
         return (
             <div>
                 <h1>Kestrel</h1>
-                <div className="error">Error: {hasError.msg}</div>
+                <div><span className="error">Error:</span> {hasError.msg}</div>
             </div>
         )
     }
@@ -127,9 +140,7 @@ export default function App() {
         <div>
             <h1>Kestrel</h1>
             <EncryptButton
-                keyResult={keyResult}
-                deriveKey={deriveKey}
-                dkShowSpinner={dkShowSpinner} />
+                sendMessage={sendMessage} />
             {hasError != null &&
                 <div className="error">{hasError.msg}</div>
             }

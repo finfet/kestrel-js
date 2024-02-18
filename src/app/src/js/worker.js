@@ -1,4 +1,5 @@
-import { Crypto, Utils } from "kestrel-crypto";
+import { Crypto } from "kestrel-crypto";
+import { toUtf8Bytes, toHex } from "kestrel-crypto/utils";
 
 
 let crypto = null;
@@ -11,27 +12,29 @@ function start() {
 }
 
 self.onmessage = (e) => {
+    let msgId = e.data.id;
     let msgType = e.data.type;
     let args = e.data.args;
 
     try {
         switch (msgType) {
             case "scrypt":
-                runScrypt(args);
+                runScrypt(msgId, args);
                 break;
             default:
                 break;
         }
     } catch (err) {
-        self.postMessage({ type: "exception", msgType: msgType, msg: err.toString() });
+        self.postMessage({ id: e.data.id, type: "exception", result: { type: msgType, msg: err.toString() }});
     }
 }
 
-function runScrypt(args) {
-    let result = crypto.scrypt(Utils.toUtf8Bytes(args[0]), Utils.toUtf8Bytes("yellowsubmarine."), 32768, 8, 1, 32);
+function runScrypt(msgId, args) {
+    let result = crypto.scrypt(args[0], toUtf8Bytes("yellowsubmarine."), 32768, 8, 1, 32);
     let message = {
-        result: Utils.toHex(result),
-        type: "scrypt"
+        id: msgId,
+        type: "scrypt",
+        result: toHex(result),
     };
     self.postMessage(message);
 }
