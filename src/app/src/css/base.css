@@ -1,0 +1,109 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+* {
+    margin: 0;
+}
+
+html, body {
+    height: 100%;
+    font-size: 16px;
+    font-family: "Helvetica", "Arial", sans-serif;
+}
+
+body {
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    background-color: #fff;
+}
+
+img, picture, video, canvas, svg {
+    display: block;
+    max-width: 100%;
+}
+
+input, button, textarea, select {
+    font: inherit;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+    overflow-wrap: break-word;
+}
+
+.container {
+    height: 100%;
+    max-width: 968px;
+    padding: 1em;
+    margin: auto;
+    background-color: #fff;
+}
+
+@keyframes dot-load1 {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+@keyframes dot-load2 {
+    from {
+        transform: translate(0, 0);
+    }
+
+    to {
+        transform: translate(24px, 0);
+    }
+}
+
+@keyframes dot-load3 {
+    from {
+        transform: scale(1);
+    }
+
+    to {
+        transform: scale(0);
+    }
+}
+
+.dot-loader {
+    display: inline-block;
+    position: relative;
+    width: 75px;
+}
+
+.dot-loader div {
+    position: absolute;
+    top: -12px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #990000;
+    animation-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+
+.dot-loader div:nth-child(1) {
+    left: 8px;
+    animation: dot-load1 0.6s infinite;
+}
+
+.dot-loader div:nth-child(2) {
+    left: 8px;
+    animation: dot-load2 0.6s infinite;
+}
+
+.dot-loader div:nth-child(3) {
+    left: 32px;
+    animation: dot-load2 0.6s infinite;
+}
+
+.dot-loader div:nth-child(4) {
+    left: 56px;
+    animation: dot-load3 0.6s infinite;
+}
+
+.error {
+    color: red;
+}

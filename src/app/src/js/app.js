@@ -3,16 +3,21 @@ import { toUtf8Bytes } from "kestrel-crypto/utils";
 
 const ANIMATION_DURATION = 200;
 
-const WORKER_MSG_STATES = {
-    encryptButtonDeriveKey: "encrypt_button_derive_key"
+const workerMsgNames = {
+    passEncryptUnlock: "pass_encrypt_unlock"
 }
 
-const NAV_STATES = {
+const navStates = {
     encrypt: 0,
     decrypt: 1,
     contacts: 2,
-    encryptKey: 3,
-    encryptPassword: 4,
+    keyEncrypt: 3,
+    passEncrypt: 4,
+}
+
+const initialState = {
+    passEncryptUnlockResult: "",
+    passEncryptUnlockLoading: false
 }
 
 function DotLoader({ classes }) {
@@ -29,9 +34,22 @@ function DotLoader({ classes }) {
 function NavBar({ encryptClick, decryptClick, contactsClick, active }) {
     return (
         <div className="mt-3 pb-3">
-            <button onClick={encryptClick} className={"nav-button " + (active == NAV_STATES.encrypt ? "nav-button-active" : "")}>Encrypt</button>
-            <button onClick={decryptClick} className={"nav-button " + (active == NAV_STATES.decrypt ? "nav-button-active" : "")}>Decrypt</button>
-            <button onClick={contactsClick} className={"nav-button nav-button-end " + (active == NAV_STATES.contacts ? "nav-button-active" : "")}>Contacts</button>
+            <ul className="nav">
+                <li className="nav-title">Kestrel</li>
+                <li onClick={encryptClick} className={"nav-button " + (active == navStates.encrypt ? "nav-button-active" : "")}>Encrypt</li>
+                <li onClick={decryptClick} className={"nav-button " + (active == navStates.decrypt ? "nav-button-active" : "")}>Decrypt</li>
+                <li onClick={contactsClick} className={"nav-button nav-button-end " + (active == navStates.contacts ? "nav-button-active" : "")}>Contacts</li>
+            </ul>
+        </div>
+    )
+}
+
+function LoadingNavBar() {
+    return (
+        <div className="mt-3 pb-3">
+            <ul className="nav">
+                <li className="nav-title">Kestrel</li>
+            </ul>
         </div>
     )
 }
@@ -61,7 +79,7 @@ function EncryptPage({ sendMessage, msgId, keyResult, keyLoading }) {
             setDkAnimStart(false);
             setDkAnimMet(true);
         }, ANIMATION_DURATION);
-        sendMessage(msgId, "scrypt", WORKER_MSG_STATES.encryptButtonDeriveKey, [toUtf8Bytes("hackme")]);
+        sendMessage(msgId, "scrypt", workerMsgNames.passEncryptUnlock, [toUtf8Bytes("hackme")]);
     }
 
     if (dkShowSpinner) {
@@ -81,21 +99,16 @@ function EncryptPage({ sendMessage, msgId, keyResult, keyLoading }) {
 }
 
 function workerReducer(state, action) {
-    if (action.action == "send" && action.msg.name == WORKER_MSG_STATES.encryptButtonDeriveKey) {
+    if (action.action == "send" && action.msg.name == workerMsgNames.passEncryptUnlock) {
         return {
             ...state,
-            encryptButtonDeriveKey: {
-                ...state.encryptButtonDeriveKey,
-                loading: true
-            }
+            passEncryptUnlockLoading: true
         };
-    } else if (action.action == "recv" && action.msg.name == WORKER_MSG_STATES.encryptButtonDeriveKey) {
+    } else if (action.action == "recv" && action.msg.name == workerMsgNames.passEncryptUnlock) {
         return {
             ...state,
-            encryptButtonDeriveKey: {
-                result: action.msg.result,
-                loading: false
-            }
+            passEncryptUnlockLoading: false,
+            passEncryptUnlockResult: action.msg.result
         };
     } else {
         throw new Error("Unsupported crypto worker state action");
@@ -103,15 +116,9 @@ function workerReducer(state, action) {
 }
 
 export default function App() {
-
     const [cryptoWorker, setCryptoWorker] = useState(null);
-    const [workerResults, dispatch] = useReducer(workerReducer, {
-        encryptButtonDeriveKey: {
-            result: "",
-            loading: false
-        }
-    });
-    const [navState, setNavState] = useState(NAV_STATES.encrypt);
+    const [workerResults, dispatch] = useReducer(workerReducer, initialState);
+    const [navState, setNavState] = useState(navStates.encrypt);
     const [hasError, setHasError] = useState(null);
 
     const [workerLoading, setWorkerLoading] = useState(true);
@@ -176,21 +183,25 @@ export default function App() {
     }
 
     function encryptClicked() {
-        setNavState(NAV_STATES.encrypt);
+        setNavState(navStates.encrypt);
     }
 
     function decryptClicked() {
-        setNavState(NAV_STATES.decrypt);
+        setNavState(navStates.decrypt);
     }
 
     function contactsClicked() {
-        setNavState(NAV_STATES.contacts);
+        setNavState(navStates.contacts);
     }
 
     if (hasError) {
         return (
             <div>
-                <h1 className="uppercase">Kestrel</h1>
+                <NavBar
+                    encryptClick={encryptClicked}
+                    decryptClick={decryptClicked}
+                    contactsClick={contactsClicked}
+                    active={navState} />
                 <div><span className="error">Error:</span> {hasError.msg}</div>
             </div>
         )
@@ -199,16 +210,15 @@ export default function App() {
     if (showSpinner) {
         return (
             <div>
-                <h1 className="uppercase">Kestrel</h1>
+                <LoadingNavBar />
                 <DotLoader />
             </div>
         )
     }
 
-    if (navState == NAV_STATES.encrypt) {
+    if (navState == navStates.encrypt) {
         return (
             <div>
-                <h1 className="uppercase">Kestrel</h1>
                 <NavBar
                     encryptClick={encryptClicked}
                     decryptClick={decryptClicked}
@@ -217,17 +227,16 @@ export default function App() {
                 <EncryptPage
                     sendMessage={sendMessage}
                     msgId={messageId}
-                    keyResult={workerResults.encryptButtonDeriveKey.result}
-                    keyLoading={workerResults.encryptButtonDeriveKey.loading} />
+                    keyResult={workerResults.passEncryptUnlockResult}
+                    keyLoading={workerResults.passEncryptUnlockLoading} />
                 {hasError != null &&
                     <div className="error">{hasError.msg}</div>
                 }
             </div>
         )
-    } else if (navState == NAV_STATES.decrypt) {
+    } else if (navState == navStates.decrypt) {
         return (
             <div>
-                <h1 className="uppercase">Kestrel</h1>
                 <NavBar
                     encryptClick={encryptClicked}
                     decryptClick={decryptClicked}
@@ -236,10 +245,9 @@ export default function App() {
                 <DecryptPage />
             </div>
         )
-    } else if (navState == NAV_STATES.contacts) {
+    } else if (navState == navStates.contacts) {
         return (
             <div>
-                <h1 className="uppercase">Kestrel</h1>
                 <NavBar
                     encryptClick={encryptClicked}
                     decryptClick={decryptClicked}
@@ -249,8 +257,6 @@ export default function App() {
             </div>
         )
     } else {
-        return (
-            <div>Invalid State</div>
-        )
+        return <div>Error: Invalid State</div>
     }
 }

@@ -1,109 +1,75 @@
-*, *::before, *::after {
-    box-sizing: border-box;
+button {
+    border: 2px solid black;
+    padding: 2px 5px 2px 5px;
+    min-width: 75px;
+    min-height: 25px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #000;
+    background: #fff;
+    box-shadow: 4px 4px #808080;
 }
 
-* {
+button:disabled {
+    background: #808080;
+    opacity: 0.7;
+}
+
+button:hover:enabled {
+    background: #900000;
+    color: #fff;
+    cursor: pointer;
+}
+
+ul.nav {
+    list-style-type: none;
+    padding: 0;
     margin: 0;
 }
 
-html, body {
-    height: 100%;
-    font-size: 16px;
-    font-family: "Helvetica", "Arial", sans-serif;
-}
-
-body {
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-    background-color: #fff;
-}
-
-img, picture, video, canvas, svg {
-    display: block;
-    max-width: 100%;
-}
-
-input, button, textarea, select {
-    font: inherit;
-}
-
-p, h1, h2, h3, h4, h5, h6 {
-    overflow-wrap: break-word;
-}
-
-.container {
-    height: 100%;
-    max-width: 968px;
-    padding: 1em;
-    margin: auto;
-    background-color: #fff;
-}
-
-@keyframes dot-load1 {
-    from {
-        transform: scale(0);
-    }
-    to {
-        transform: scale(1);
-    }
-}
-
-@keyframes dot-load2 {
-    from {
-        transform: translate(0, 0);
-    }
-
-    to {
-        transform: translate(24px, 0);
-    }
-}
-
-@keyframes dot-load3 {
-    from {
-        transform: scale(1);
-    }
-
-    to {
-        transform: scale(0);
-    }
-}
-
-.dot-loader {
+ul.nav li {
     display: inline-block;
-    position: relative;
-    width: 75px;
 }
 
-.dot-loader div {
-    position: absolute;
-    top: -12px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #990000;
-    animation-timing-function: cubic-bezier(0, 1, 1, 0);
+ul.nav .nav-title {
+    margin-right: 1.2rem;
+    text-transform: uppercase;
+    font-weight: bold;
 }
 
-.dot-loader div:nth-child(1) {
-    left: 8px;
-    animation: dot-load1 0.6s infinite;
+ul.nav .nav-button {
+    margin-right: 1.2rem;
+    cursor: pointer;
 }
 
-.dot-loader div:nth-child(2) {
-    left: 8px;
-    animation: dot-load2 0.6s infinite;
+ul.nav .nav-button-end {
+    margin-right: 0rem;
 }
 
-.dot-loader div:nth-child(3) {
-    left: 32px;
-    animation: dot-load2 0.6s infinite;
+ul.nav .nav-button-active {
+    border-bottom: 2px solid #900000;
 }
 
-.dot-loader div:nth-child(4) {
-    left: 56px;
-    animation: dot-load3 0.6s infinite;
+.ml-1 {
+    margin-left: 0.25rem;
 }
 
-.error {
-    color: red;
+.mt-3 {
+    margin-top: 1rem;
+}
+
+.pb-2 {
+    padding-bottom: 0.5rem;
+}
+
+.pb-3 {
+    padding-bottom: 1rem;
+}
+
+.pb-4 {
+    padding-bottom: 2rem;
+}
+
+.uppercase {
+    text-transform: uppercase;
 }
