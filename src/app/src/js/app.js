@@ -1,9 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useReducer } from "react";
 import { toUtf8Bytes } from "kestrel-crypto/utils";
 
-function DotLoader({ className }) {
+const ANIMATION_DURATION = 200;
+
+const WORKER_MSG_STATES = {
+    encryptButtonDeriveKey: "encrypt_button_derive_key"
+}
+
+const NAV_STATES = {
+    encrypt: 0,
+    decrypt: 1,
+    contacts: 2,
+    encryptKey: 3,
+    encryptPassword: 4,
+}
+
+function DotLoader({ classes }) {
     return (
-        <div className={`dot-loader ${className}`}>
+        <div className={`dot-loader ${classes}`}>
             <div></div>
             <div></div>
             <div></div>
@@ -12,34 +26,49 @@ function DotLoader({ className }) {
     )
 }
 
-function EncryptButton({ sendMessage }) {
-    const [deriveKeyLoading, setDeriveKeyLoading] = useState(false);
+function NavBar({ encryptClick, decryptClick, contactsClick, active }) {
+    return (
+        <div className="mt-3 pb-3">
+            <button onClick={encryptClick} className={"nav-button " + (active == NAV_STATES.encrypt ? "nav-button-active" : "")}>Encrypt</button>
+            <button onClick={decryptClick} className={"nav-button " + (active == NAV_STATES.decrypt ? "nav-button-active" : "")}>Decrypt</button>
+            <button onClick={contactsClick} className={"nav-button nav-button-end " + (active == NAV_STATES.contacts ? "nav-button-active" : "")}>Contacts</button>
+        </div>
+    )
+}
+
+function DecryptPage() {
+    return (
+        <div>Decrypt</div>
+    )
+}
+
+function ContactsPage() {
+    return (
+        <div>Contacts</div>
+    )
+}
+
+function EncryptPage({ sendMessage, msgId, keyResult, keyLoading }) {
     const [dkAnimStart, setDkAnimStart] = useState(false);
     const [dkAnimMet, setDkAnimMet] = useState(false);
 
-    const [keyResult, setKeyResult] = useState("");
-    const dkShowSpinner = deriveKeyLoading || (dkAnimStart && !dkAnimMet);
+    const dkShowSpinner = keyLoading || (dkAnimStart && !dkAnimMet);
 
     function deriveKey() {
-        setDeriveKeyLoading(true);
         setDkAnimStart(true);
         setDkAnimMet(false);
         setTimeout(() => {
             setDkAnimStart(false);
             setDkAnimMet(true);
-        }, 200);
-        sendMessage("scrypt", [toUtf8Bytes("hackme")], msg => {
-            let key = msg.result;
-            setDeriveKeyLoading(false);
-            setKeyResult(key);
-        });
+        }, ANIMATION_DURATION);
+        sendMessage(msgId, "scrypt", WORKER_MSG_STATES.encryptButtonDeriveKey, [toUtf8Bytes("hackme")]);
     }
 
     if (dkShowSpinner) {
         return (
             <div>
                 <button onClick={deriveKey} disabled>Encrypt</button>
-                <DotLoader className={"ml-1"} />
+                <DotLoader classes={"ml-1"} />
             </div>
         )
     }
@@ -51,15 +80,44 @@ function EncryptButton({ sendMessage }) {
     )
 }
 
+function workerReducer(state, action) {
+    if (action.action == "send" && action.msg.name == WORKER_MSG_STATES.encryptButtonDeriveKey) {
+        return {
+            ...state,
+            encryptButtonDeriveKey: {
+                ...state.encryptButtonDeriveKey,
+                loading: true
+            }
+        };
+    } else if (action.action == "recv" && action.msg.name == WORKER_MSG_STATES.encryptButtonDeriveKey) {
+        return {
+            ...state,
+            encryptButtonDeriveKey: {
+                result: action.msg.result,
+                loading: false
+            }
+        };
+    } else {
+        throw new Error("Unsupported crypto worker state action");
+    }
+}
+
 export default function App() {
+
     const [cryptoWorker, setCryptoWorker] = useState(null);
+    const [workerResults, dispatch] = useReducer(workerReducer, {
+        encryptButtonDeriveKey: {
+            result: "",
+            loading: false
+        }
+    });
+    const [navState, setNavState] = useState(NAV_STATES.encrypt);
     const [hasError, setHasError] = useState(null);
-    const [messageId, setMessageId] = useState(0);
-    const [messageCallbacks, setMessageCallbacks] = useState(new Map());
 
     const [workerLoading, setWorkerLoading] = useState(true);
     const [animStart, setAnimStart] = useState(false);
     const [animMet, setAnimMet] = useState(false);
+    const [messageId, setMessageId] = useState(0);
 
     const showSpinner = workerLoading || (animStart && !animMet);
 
@@ -72,12 +130,10 @@ export default function App() {
             } else if (msg.type == "exception") {
                 processError(msg);
             } else {
-                let callback = messageCallbacks.get(msg.id);
-                setMessageCallbacks(prev => prev.delete(msg.id));
-                callback(msg);
+                dispatch({ action: "recv", msg: msg });
             }
         }
-        worker.onerror = e => {
+        worker.onerror = (_e) => {
             const msg = {
                 id: 0,
                 type: "exception",
@@ -92,7 +148,7 @@ export default function App() {
         setTimeout(() => {
             setAnimMet(true);
             setAnimStart(false);
-        }, 200);
+        }, ANIMATION_DURATION);
         return () => {
             if (cryptoWorker) {
                 cryptoWorker.terminate();
@@ -100,16 +156,17 @@ export default function App() {
         }
     }, []);
 
-    function sendMessage(type, args, callback) {
+    function sendMessage(id, type, name, args) {
         setHasError(null);
-        const id = messageId + 1;
+        let msgId = id + 1;
         const msg = {
             id: id,
             type: type,
+            name: name,
             args: args
         };
-        setMessageId(id);
-        setMessageCallbacks(prev => prev.set(id, callback));
+        setMessageId(msgId);
+        dispatch({ action: "send", msg: msg });
         cryptoWorker.postMessage(msg);
     }
 
@@ -118,10 +175,22 @@ export default function App() {
         setHasError(result);
     }
 
+    function encryptClicked() {
+        setNavState(NAV_STATES.encrypt);
+    }
+
+    function decryptClicked() {
+        setNavState(NAV_STATES.decrypt);
+    }
+
+    function contactsClicked() {
+        setNavState(NAV_STATES.contacts);
+    }
+
     if (hasError) {
         return (
             <div>
-                <h1>Kestrel</h1>
+                <h1 className="uppercase">Kestrel</h1>
                 <div><span className="error">Error:</span> {hasError.msg}</div>
             </div>
         )
@@ -130,20 +199,58 @@ export default function App() {
     if (showSpinner) {
         return (
             <div>
-                <h1>Kestrel</h1>
+                <h1 className="uppercase">Kestrel</h1>
                 <DotLoader />
             </div>
         )
     }
 
-    return (
-        <div>
-            <h1>Kestrel</h1>
-            <EncryptButton
-                sendMessage={sendMessage} />
-            {hasError != null &&
-                <div className="error">{hasError.msg}</div>
-            }
-        </div>
-    )
+    if (navState == NAV_STATES.encrypt) {
+        return (
+            <div>
+                <h1 className="uppercase">Kestrel</h1>
+                <NavBar
+                    encryptClick={encryptClicked}
+                    decryptClick={decryptClicked}
+                    contactsClick={contactsClicked}
+                    active={navState} />
+                <EncryptPage
+                    sendMessage={sendMessage}
+                    msgId={messageId}
+                    keyResult={workerResults.encryptButtonDeriveKey.result}
+                    keyLoading={workerResults.encryptButtonDeriveKey.loading} />
+                {hasError != null &&
+                    <div className="error">{hasError.msg}</div>
+                }
+            </div>
+        )
+    } else if (navState == NAV_STATES.decrypt) {
+        return (
+            <div>
+                <h1 className="uppercase">Kestrel</h1>
+                <NavBar
+                    encryptClick={encryptClicked}
+                    decryptClick={decryptClicked}
+                    contactsClick={contactsClicked}
+                    active={navState} />
+                <DecryptPage />
+            </div>
+        )
+    } else if (navState == NAV_STATES.contacts) {
+        return (
+            <div>
+                <h1 className="uppercase">Kestrel</h1>
+                <NavBar
+                    encryptClick={encryptClicked}
+                    decryptClick={decryptClicked}
+                    contactsClick={contactsClicked}
+                    active={navState} />
+                <ContactsPage />
+            </div>
+        )
+    } else {
+        return (
+            <div>Invalid State</div>
+        )
+    }
 }

@@ -7,7 +7,8 @@
     "scripts": {
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "serve": "serve -l 8000 dist/"
+        "serve": "serve -l 8000 dist/",
+        "copy": "node copy.js"
     },
     "repository": {
         "type": "git",
