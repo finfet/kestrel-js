@@ -35,7 +35,7 @@ function NavBar({ encryptClick, decryptClick, contactsClick, active }) {
     return (
         <div className="mt-3 pb-3">
             <ul className="nav">
-                <li className="nav-title">Kestrel</li>
+                <li className="nav-title"><a className="nav-link" href="/">Kestrel</a></li>
                 <li onClick={encryptClick} className={"nav-button " + (active == navStates.encrypt ? "nav-button-active" : "")}>Encrypt</li>
                 <li onClick={decryptClick} className={"nav-button " + (active == navStates.decrypt ? "nav-button-active" : "")}>Decrypt</li>
                 <li onClick={contactsClick} className={"nav-button nav-button-end " + (active == navStates.contacts ? "nav-button-active" : "")}>Contacts</li>
@@ -66,15 +66,58 @@ function ContactsPage() {
     )
 }
 
-function EncryptPage({ sendMessage, msgId, keyResult, keyLoading }) {
+function KeyEncryptPage() {
+    return (
+        <div>
+            <h2>Encrypt with Key</h2>
+        </div>
+    )
+}
+
+function EncryptPage({ sendMessage, msgId, passEncryptUnlockResult, passEncryptUnlockLoading }) {
+    const [keyClicked, setKeyClicked] = useState(false);
+    const [passClicked, setPassClicked] = useState(false);
+
+    function handleClick(key, pass) {
+        setKeyClicked(key);
+        setPassClicked(pass);
+    }
+
+    if (keyClicked) {
+        return (<KeyEncryptPage />);
+    } else if (passClicked) {
+        return (
+            <PassEncryptPage
+                sendMessage={sendMessage}
+                msgId={msgId}
+                passEncryptUnlockResult={passEncryptUnlockResult}
+                passEncryptUnlockLoading={passEncryptUnlockLoading} />
+        );
+    } else {
+        return (
+            <div>
+                <button onClick={() => handleClick(true, false)} disabled={passClicked}>Use Key</button>
+                <button className="ml-4" onClick={() => handleClick(false, true)} disabled={keyClicked}>Use Password</button>
+            </div>
+        )
+    }
+}
+
+function PassEncryptPage({ sendMessage, msgId, passEncryptUnlockResult, passEncryptUnlockLoading }) {
     const [dkAnimStart, setDkAnimStart] = useState(false);
     const [dkAnimMet, setDkAnimMet] = useState(false);
+    const [unlockClicked, setUnlockClicked] = useState(false);
+    const dkShowSpinner = passEncryptUnlockLoading || (dkAnimStart && !dkAnimMet);
 
-    const dkShowSpinner = keyLoading || (dkAnimStart && !dkAnimMet);
+    let unlock = "";
+    if (unlockClicked) {
+        unlock = passEncryptUnlockResult;
+    }
 
     function deriveKey() {
         setDkAnimStart(true);
         setDkAnimMet(false);
+        setUnlockClicked(true);
         setTimeout(() => {
             setDkAnimStart(false);
             setDkAnimMet(true);
@@ -82,18 +125,15 @@ function EncryptPage({ sendMessage, msgId, keyResult, keyLoading }) {
         sendMessage(msgId, "scrypt", workerMsgNames.passEncryptUnlock, [toUtf8Bytes("hackme")]);
     }
 
-    if (dkShowSpinner) {
-        return (
-            <div>
-                <button onClick={deriveKey} disabled>Encrypt</button>
-                <DotLoader classes={"ml-1"} />
-            </div>
-        )
-    }
     return (
         <div>
-            <button onClick={deriveKey}>Encrypt</button>
-            <span style={{paddingLeft: 0.5 + "rem"}}>{keyResult}</span>
+            <button onClick={deriveKey} disabled={dkShowSpinner}>Encrypt</button>
+            { dkShowSpinner ? (
+                    <DotLoader classes={"ml-1"} />
+                ) : (
+                    <span style={{paddingLeft: 0.5 + "rem"}}>{unlock}</span>
+                )
+            }
         </div>
     )
 }
@@ -117,8 +157,9 @@ function workerReducer(state, action) {
 
 export default function App() {
     const [cryptoWorker, setCryptoWorker] = useState(null);
-    const [workerResults, dispatch] = useReducer(workerReducer, initialState);
+    const [state, dispatch] = useReducer(workerReducer, initialState);
     const [navState, setNavState] = useState(navStates.encrypt);
+    const [resetKey, setResetKey] = useState(0);
     const [hasError, setHasError] = useState(null);
 
     const [workerLoading, setWorkerLoading] = useState(true);
@@ -183,14 +224,17 @@ export default function App() {
     }
 
     function encryptClicked() {
+        setResetKey(resetKey + 1);
         setNavState(navStates.encrypt);
     }
 
     function decryptClicked() {
+        setResetKey(resetKey + 1);
         setNavState(navStates.decrypt);
     }
 
     function contactsClicked() {
+        setResetKey(resetKey + 1);
         setNavState(navStates.contacts);
     }
 
@@ -225,13 +269,11 @@ export default function App() {
                     contactsClick={contactsClicked}
                     active={navState} />
                 <EncryptPage
+                    key={resetKey}
                     sendMessage={sendMessage}
                     msgId={messageId}
-                    keyResult={workerResults.passEncryptUnlockResult}
-                    keyLoading={workerResults.passEncryptUnlockLoading} />
-                {hasError != null &&
-                    <div className="error">{hasError.msg}</div>
-                }
+                    passEncryptUnlockResult={state.passEncryptUnlockResult}
+                    passEncryptUnlockLoading={state.passEncryptUnlockLoading} />
             </div>
         )
     } else if (navState == navStates.decrypt) {
@@ -242,7 +284,7 @@ export default function App() {
                     decryptClick={decryptClicked}
                     contactsClick={contactsClicked}
                     active={navState} />
-                <DecryptPage />
+                <DecryptPage key={resetKey} />
             </div>
         )
     } else if (navState == navStates.contacts) {
@@ -253,7 +295,7 @@ export default function App() {
                     decryptClick={decryptClicked}
                     contactsClick={contactsClicked}
                     active={navState} />
-                <ContactsPage />
+                <ContactsPage key={resetKey} />
             </div>
         )
     } else {
