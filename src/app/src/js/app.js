@@ -10,9 +10,13 @@ const workerMsgNames = {
 const navStates = {
     encrypt: 0,
     decrypt: 1,
-    contacts: 2,
-    keyEncrypt: 3,
-    passEncrypt: 4,
+    contacts: 2
+}
+
+const encryptNavStates = {
+    start: 0,
+    key: 1,
+    pass: 2
 }
 
 const initialState = {
@@ -74,35 +78,6 @@ function KeyEncryptPage() {
     )
 }
 
-function EncryptPage({ sendMessage, msgId, passEncryptUnlockResult, passEncryptUnlockLoading }) {
-    const [keyClicked, setKeyClicked] = useState(false);
-    const [passClicked, setPassClicked] = useState(false);
-
-    function handleClick(key, pass) {
-        setKeyClicked(key);
-        setPassClicked(pass);
-    }
-
-    if (keyClicked) {
-        return (<KeyEncryptPage />);
-    } else if (passClicked) {
-        return (
-            <PassEncryptPage
-                sendMessage={sendMessage}
-                msgId={msgId}
-                passEncryptUnlockResult={passEncryptUnlockResult}
-                passEncryptUnlockLoading={passEncryptUnlockLoading} />
-        );
-    } else {
-        return (
-            <div>
-                <button onClick={() => handleClick(true, false)} disabled={passClicked}>Use Key</button>
-                <button className="ml-4" onClick={() => handleClick(false, true)} disabled={keyClicked}>Use Password</button>
-            </div>
-        )
-    }
-}
-
 function PassEncryptPage({ sendMessage, msgId, passEncryptUnlockResult, passEncryptUnlockLoading }) {
     const [dkAnimStart, setDkAnimStart] = useState(false);
     const [dkAnimMet, setDkAnimMet] = useState(false);
@@ -127,6 +102,7 @@ function PassEncryptPage({ sendMessage, msgId, passEncryptUnlockResult, passEncr
 
     return (
         <div>
+            <h4>Encrypt with Password</h4>
             <button onClick={deriveKey} disabled={dkShowSpinner}>Encrypt</button>
             { dkShowSpinner ? (
                     <DotLoader classes={"ml-1"} />
@@ -159,6 +135,7 @@ export default function App() {
     const [cryptoWorker, setCryptoWorker] = useState(null);
     const [state, dispatch] = useReducer(workerReducer, initialState);
     const [navState, setNavState] = useState(navStates.encrypt);
+    const [encryptNavState, setEncryptNavState] = useState(encryptNavStates.start);
     const [resetKey, setResetKey] = useState(0);
     const [hasError, setHasError] = useState(null);
 
@@ -223,28 +200,58 @@ export default function App() {
         setHasError(result);
     }
 
-    function encryptClicked() {
+    function encryptClick() {
         setResetKey(resetKey + 1);
+        setEncryptNavState(encryptNavStates.start);
         setNavState(navStates.encrypt);
     }
 
-    function decryptClicked() {
+    function decryptClick() {
         setResetKey(resetKey + 1);
         setNavState(navStates.decrypt);
     }
 
-    function contactsClicked() {
+    function contactsClick() {
         setResetKey(resetKey + 1);
         setNavState(navStates.contacts);
+    }
+
+    function encryptNavClick(key) {
+        if (key) {
+            setEncryptNavState(encryptNavStates.key);
+        } else {
+            setEncryptNavState(encryptNavStates.pass);
+        }
+    }
+
+    let encryptPage = (
+        <div>
+            <button onClick={() => encryptNavClick(true)}>Use Key</button>
+            <button className="ml-4" onClick={() => encryptNavClick(false)}>Use Password</button>
+        </div>
+    );
+
+    if (encryptNavState == encryptNavStates.pass) {
+        encryptPage = (
+            <PassEncryptPage
+                sendMessage={sendMessage}
+                msgId={messageId}
+                passEncryptUnlockResult={state.passEncryptUnlockResult}
+                passEncryptUnlockLoading={state.passEncryptUnlockLoading} />
+        );
+    } else if (encryptNavState == encryptNavStates.key) {
+        encryptPage = (
+            <KeyEncryptPage />
+        )
     }
 
     if (hasError) {
         return (
             <div>
                 <NavBar
-                    encryptClick={encryptClicked}
-                    decryptClick={decryptClicked}
-                    contactsClick={contactsClicked}
+                    encryptClick={encryptClick}
+                    decryptClick={decryptClick}
+                    contactsClick={contactsClick}
                     active={navState} />
                 <div><span className="error">Error:</span> {hasError.msg}</div>
             </div>
@@ -264,25 +271,20 @@ export default function App() {
         return (
             <div>
                 <NavBar
-                    encryptClick={encryptClicked}
-                    decryptClick={decryptClicked}
-                    contactsClick={contactsClicked}
+                    encryptClick={encryptClick}
+                    decryptClick={decryptClick}
+                    contactsClick={contactsClick}
                     active={navState} />
-                <EncryptPage
-                    key={resetKey}
-                    sendMessage={sendMessage}
-                    msgId={messageId}
-                    passEncryptUnlockResult={state.passEncryptUnlockResult}
-                    passEncryptUnlockLoading={state.passEncryptUnlockLoading} />
+                { encryptPage }
             </div>
         )
     } else if (navState == navStates.decrypt) {
         return (
             <div>
                 <NavBar
-                    encryptClick={encryptClicked}
-                    decryptClick={decryptClicked}
-                    contactsClick={contactsClicked}
+                    encryptClick={encryptClick}
+                    decryptClick={decryptClick}
+                    contactsClick={contactsClick}
                     active={navState} />
                 <DecryptPage key={resetKey} />
             </div>
@@ -291,9 +293,9 @@ export default function App() {
         return (
             <div>
                 <NavBar
-                    encryptClick={encryptClicked}
-                    decryptClick={decryptClicked}
-                    contactsClick={contactsClicked}
+                    encryptClick={encryptClick}
+                    decryptClick={decryptClick}
+                    contactsClick={contactsClick}
                     active={navState} />
                 <ContactsPage key={resetKey} />
             </div>
