@@ -4,7 +4,7 @@ import { toUtf8Bytes } from "kestrel-crypto/utils";
 const ANIMATION_DURATION = 200;
 
 const workerMsgNames = {
-    passEncryptUnlock: "pass_encrypt_unlock"
+    passEncrypt: "pass_encrypt"
 }
 
 const navStates = {
@@ -20,8 +20,8 @@ const encryptNavStates = {
 }
 
 const initialState = {
-    passEncryptUnlockResult: "",
-    passEncryptUnlockLoading: false
+    passEncryptResult: "",
+    passEncryptLoading: false
 }
 
 function DotLoader({ classes }) {
@@ -78,18 +78,52 @@ function KeyEncryptPage() {
     )
 }
 
-function PassEncryptPage({ sendMessage, msgId, passEncryptUnlockResult, passEncryptUnlockLoading }) {
+function PassEncryptPage({ sendMessage, msgId, passEncryptResult, passEncryptLoading }) {
     const [dkAnimStart, setDkAnimStart] = useState(false);
     const [dkAnimMet, setDkAnimMet] = useState(false);
     const [unlockClicked, setUnlockClicked] = useState(false);
-    const dkShowSpinner = passEncryptUnlockLoading || (dkAnimStart && !dkAnimMet);
+
+    const [plaintextFile, setPlaintextFile] = useState(null);
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [validationError, setValidationError] = useState(false);
+    const [errorMsg, setErrorMsg] = useState("");
+
+    const dkShowSpinner = passEncryptLoading || (dkAnimStart && !dkAnimMet);
+    const encryptDisabled = validationError || dkShowSpinner;
 
     let unlock = "";
     if (unlockClicked) {
-        unlock = passEncryptUnlockResult;
+        unlock = passEncryptResult;
     }
 
-    function deriveKey() {
+    function fileChange(event) {
+        setValidationError(false);
+        setPlaintextFile(event.target.files[0]);
+    }
+
+    function passwordChange(event) {
+        setValidationError(false);
+        setPassword(event.target.value);
+    }
+
+    function confirmPasswordChange(event) {
+        setValidationError(false);
+        setConfirmPassword(event.target.value);
+    }
+
+    function encryptClick(event) {
+        event.preventDefault();
+        if (plaintextFile) {
+            console.log("plaintextFile:", plaintextFile.name);
+        }
+        if (password != confirmPassword) {
+            setValidationError(true);
+            setErrorMsg("Passwords do not match");
+            return;
+        }
+        console.log("password:", password);
+        console.log("confirm :", confirmPassword);
         setDkAnimStart(true);
         setDkAnimMet(false);
         setUnlockClicked(true);
@@ -97,34 +131,77 @@ function PassEncryptPage({ sendMessage, msgId, passEncryptUnlockResult, passEncr
             setDkAnimStart(false);
             setDkAnimMet(true);
         }, ANIMATION_DURATION);
-        sendMessage(msgId, "scrypt", workerMsgNames.passEncryptUnlock, [toUtf8Bytes("hackme")]);
+        sendMessage(msgId, "scrypt", workerMsgNames.passEncrypt, [toUtf8Bytes(password)]);
     }
 
     return (
         <div>
             <h4>Encrypt with Password</h4>
-            <button onClick={deriveKey} disabled={dkShowSpinner}>Encrypt</button>
-            { dkShowSpinner ? (
-                    <DotLoader classes={"ml-1"} />
-                ) : (
-                    <span style={{paddingLeft: 0.5 + "rem"}}>{unlock}</span>
-                )
-            }
+            <form className="pb-4">
+                <div className="pt-3">
+                    <label htmlFor="plaintext-file">Input File:</label>
+                    <input className="file-input" type="file" id="plaintext-file" name="plaintext-file" style={{marginLeft: 1 + "rem"}} onChange={fileChange} />
+                </div>
+                <div className="pt-3">
+                    <label htmlFor="password">Password:</label>
+                    <input type="password" id="password" name="password" style={{marginLeft: 1 + "rem"}} onChange={passwordChange} />
+                </div>
+                <div className="pt-1">
+                    <label htmlFor="confirm-password">Confirm:</label>
+                    <input type="password" id="confirm-password" name="confirm-password" style={{marginLeft: 1.85 + "rem"}} onChange={confirmPasswordChange} />
+                </div>
+                { validationError ? (
+                    <div className="mt-3 error">Error: {errorMsg}</div>
+                    ) : <div className="mt-3 hidden"><span class="error">OK</span></div>
+                }
+                <div className="pt-3">
+                    <button onClick={encryptClick} disabled={encryptDisabled}>Encrypt</button>
+                    { dkShowSpinner ? (
+                            <DotLoader classes={"ml-1"} />
+                        ) : (
+                            <span style={{paddingLeft: 0.5 + "rem"}}>{unlock}</span>
+                        )
+                    }
+                </div>
+            </form>
         </div>
     )
 }
 
+function EncryptPage(props) {
+    if (props.encryptNavState == encryptNavStates.key) {
+        return (
+            <KeyEncryptPage />
+        );
+    } else if (props.encryptNavState == encryptNavStates.pass) {
+        return (
+            <PassEncryptPage
+                sendMessage={props.sendMessage}
+                msgId={props.messageId}
+                passEncryptResult={props.state.passEncryptResult}
+                passEncryptLoading={props.state.passEncryptLoading} />
+        );
+    } else {
+        return (
+            <div>
+                <button onClick={() => props.encryptNavClick(true)}>Use Key</button>
+                <button className="ml-4" onClick={() => props.encryptNavClick(false)}>Use Password</button>
+            </div>
+        );
+    }
+}
+
 function workerReducer(state, action) {
-    if (action.action == "send" && action.msg.name == workerMsgNames.passEncryptUnlock) {
+    if (action.action == "send" && action.msg.name == workerMsgNames.passEncrypt) {
         return {
             ...state,
-            passEncryptUnlockLoading: true
+            passEncryptLoading: true
         };
-    } else if (action.action == "recv" && action.msg.name == workerMsgNames.passEncryptUnlock) {
+    } else if (action.action == "recv" && action.msg.name == workerMsgNames.passEncrypt) {
         return {
             ...state,
-            passEncryptUnlockLoading: false,
-            passEncryptUnlockResult: action.msg.result
+            passEncryptLoading: false,
+            passEncryptResult: action.msg.result
         };
     } else {
         throw new Error("Unsupported crypto worker state action");
@@ -136,7 +213,6 @@ export default function App() {
     const [state, dispatch] = useReducer(workerReducer, initialState);
     const [navState, setNavState] = useState(navStates.encrypt);
     const [encryptNavState, setEncryptNavState] = useState(encryptNavStates.start);
-    const [resetKey, setResetKey] = useState(0);
     const [hasError, setHasError] = useState(null);
 
     const [workerLoading, setWorkerLoading] = useState(true);
@@ -201,18 +277,15 @@ export default function App() {
     }
 
     function encryptClick() {
-        setResetKey(resetKey + 1);
         setEncryptNavState(encryptNavStates.start);
         setNavState(navStates.encrypt);
     }
 
     function decryptClick() {
-        setResetKey(resetKey + 1);
         setNavState(navStates.decrypt);
     }
 
     function contactsClick() {
-        setResetKey(resetKey + 1);
         setNavState(navStates.contacts);
     }
 
@@ -222,27 +295,6 @@ export default function App() {
         } else {
             setEncryptNavState(encryptNavStates.pass);
         }
-    }
-
-    let encryptPage = (
-        <div>
-            <button onClick={() => encryptNavClick(true)}>Use Key</button>
-            <button className="ml-4" onClick={() => encryptNavClick(false)}>Use Password</button>
-        </div>
-    );
-
-    if (encryptNavState == encryptNavStates.pass) {
-        encryptPage = (
-            <PassEncryptPage
-                sendMessage={sendMessage}
-                msgId={messageId}
-                passEncryptUnlockResult={state.passEncryptUnlockResult}
-                passEncryptUnlockLoading={state.passEncryptUnlockLoading} />
-        );
-    } else if (encryptNavState == encryptNavStates.key) {
-        encryptPage = (
-            <KeyEncryptPage />
-        )
     }
 
     if (hasError) {
@@ -275,9 +327,15 @@ export default function App() {
                     decryptClick={decryptClick}
                     contactsClick={contactsClick}
                     active={navState} />
-                { encryptPage }
+                <EncryptPage
+                    sendMessage={sendMessage}
+                    messageId={messageId}
+                    encryptNavState={encryptNavState}
+                    encryptNaveStates={encryptNavStates}
+                    encryptNavClick={encryptNavClick}
+                    state={state} />
             </div>
-        )
+        );
     } else if (navState == navStates.decrypt) {
         return (
             <div>
@@ -286,9 +344,9 @@ export default function App() {
                     decryptClick={decryptClick}
                     contactsClick={contactsClick}
                     active={navState} />
-                <DecryptPage key={resetKey} />
+                <DecryptPage />
             </div>
-        )
+        );
     } else if (navState == navStates.contacts) {
         return (
             <div>
@@ -297,10 +355,10 @@ export default function App() {
                     decryptClick={decryptClick}
                     contactsClick={contactsClick}
                     active={navState} />
-                <ContactsPage key={resetKey} />
+                <ContactsPage />
             </div>
         )
     } else {
-        return <div>Error: Invalid State</div>
+        return (<div>Error: Invalid State</div>);
     }
 }
