@@ -56,12 +56,12 @@ input:focus {
 
 input.file-input {
     border: none;
-    padding: none;
+    padding: 0;
 }
 
 input[type="file"]::file-selector-button {
     border: 2px solid black;
-    padding: 2px 5px 2px 5px;
+    padding: 0;
     min-width: 75px;
     min-height: 25px;
     overflow: hidden;
@@ -110,3 +110,12 @@ a.nav-link:visited {
     text-decoration: none;
 }
 
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group input, label {
+    display: block;
+    max-width: fit-content;
+}

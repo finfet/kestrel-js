@@ -26,7 +26,7 @@ self.onmessage = (e) => {
     }
 }
 
-function runScrypt(msg, args) {
+function runScrypt(msg) {
     let result = crypto.scrypt(msg.args[0], toUtf8Bytes("yellowsubmarine."), 32768, 8, 1, 32);
     let message = {
         id: msg.id,

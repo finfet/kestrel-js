@@ -107,7 +107,6 @@ p, h1, h2, h3, h4, h5, h6 {
 .error {
     border-left: 4px solid #900000;
     padding-left: 4px;
-    padding-top: 4px;
 }
 
 .hidden {

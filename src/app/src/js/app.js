@@ -138,21 +138,21 @@ function PassEncryptPage({ sendMessage, msgId, passEncryptResult, passEncryptLoa
         <div>
             <h4>Encrypt with Password</h4>
             <form className="pb-4">
-                <div className="pt-3">
-                    <label htmlFor="plaintext-file">Input File:</label>
-                    <input className="file-input" type="file" id="plaintext-file" name="plaintext-file" style={{marginLeft: 1 + "rem"}} onChange={fileChange} />
+                <div className="form-group pt-3">
+                    <label htmlFor="plaintext-file">Select File</label>
+                    <input className="file-input" type="file" id="plaintext-file" name="plaintext-file" onChange={fileChange} />
                 </div>
-                <div className="pt-3">
-                    <label htmlFor="password">Password:</label>
-                    <input type="password" id="password" name="password" style={{marginLeft: 1 + "rem"}} onChange={passwordChange} />
+                <div className="form-group pt-3">
+                    <label htmlFor="password">Password</label>
+                    <input type="password" id="password" name="password" onChange={passwordChange} />
                 </div>
-                <div className="pt-1">
-                    <label htmlFor="confirm-password">Confirm:</label>
-                    <input type="password" id="confirm-password" name="confirm-password" style={{marginLeft: 1.85 + "rem"}} onChange={confirmPasswordChange} />
+                <div className="form-group pt-1">
+                    <label htmlFor="confirm-password">Confirm</label>
+                    <input type="password" id="confirm-password" name="confirm-password" onChange={confirmPasswordChange} />
                 </div>
                 { validationError ? (
                     <div className="mt-3 error">Error: {errorMsg}</div>
-                    ) : <div className="mt-3 hidden"><span class="error">OK</span></div>
+                    ) : <div className="mt-3 hidden"><span>OK</span></div>
                 }
                 <div className="pt-3">
                     <button onClick={encryptClick} disabled={encryptDisabled}>Encrypt</button>
@@ -305,7 +305,7 @@ export default function App() {
                     decryptClick={decryptClick}
                     contactsClick={contactsClick}
                     active={navState} />
-                <div><span className="error">Error:</span> {hasError.msg}</div>
+                <div className="error">Error: {hasError.msg}</div>
             </div>
         )
     }
