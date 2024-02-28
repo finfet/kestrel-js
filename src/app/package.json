@@ -7,7 +7,6 @@
     "scripts": {
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "serve": "serve -l 8000 dist/",
         "copy": "node copy.js"
     },
     "repository": {
@@ -33,7 +32,6 @@
         "@rollup/plugin-commonjs": "^25.0.7",
         "@rollup/plugin-node-resolve": "^15.2.3",
         "@rollup/plugin-replace": "^5.0.5",
-        "rollup": "^4.12.0",
-        "serve": "^14.2.1"
+        "rollup": "^4.12.0"
     }
 }
