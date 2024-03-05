@@ -132,6 +132,67 @@ export function chapoly_decrypt_ietf(key, nonce, ciphertext, aad) {
 }
 
 /**
+* @param {Uint8Array} plaintext
+* @param {Uint8Array} password
+* @param {Uint8Array} salt
+* @param {number} file_format
+* @returns {Uint8Array}
+*/
+export function pass_encrypt(plaintext, password, salt, file_format) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passArray8ToWasm0(plaintext, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passArray8ToWasm0(password, wasm.__wbindgen_malloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passArray8ToWasm0(salt, wasm.__wbindgen_malloc);
+        const len2 = WASM_VECTOR_LEN;
+        wasm.pass_encrypt(retptr, ptr0, len0, ptr1, len1, ptr2, len2, file_format);
+        var r0 = getInt32Memory0()[retptr / 4 + 0];
+        var r1 = getInt32Memory0()[retptr / 4 + 1];
+        var r2 = getInt32Memory0()[retptr / 4 + 2];
+        var r3 = getInt32Memory0()[retptr / 4 + 3];
+        if (r3) {
+            throw takeObject(r2);
+        }
+        var v4 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_free(r0, r1 * 1, 1);
+        return v4;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+
+/**
+* @param {Uint8Array} ciphertext
+* @param {Uint8Array} password
+* @param {number} file_format
+* @returns {Uint8Array}
+*/
+export function pass_decrypt(ciphertext, password, file_format) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passArray8ToWasm0(ciphertext, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passArray8ToWasm0(password, wasm.__wbindgen_malloc);
+        const len1 = WASM_VECTOR_LEN;
+        wasm.pass_decrypt(retptr, ptr0, len0, ptr1, len1, file_format);
+        var r0 = getInt32Memory0()[retptr / 4 + 0];
+        var r1 = getInt32Memory0()[retptr / 4 + 1];
+        var r2 = getInt32Memory0()[retptr / 4 + 2];
+        var r3 = getInt32Memory0()[retptr / 4 + 3];
+        if (r3) {
+            throw takeObject(r2);
+        }
+        var v3 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_free(r0, r1 * 1, 1);
+        return v3;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+
+/**
 * @param {Uint8Array} password
 * @param {Uint8Array} salt
 * @param {number} n
@@ -153,6 +214,26 @@ export function scrypt(password, salt, n, r, p, dk_len) {
         var v3 = getArrayU8FromWasm0(r0, r1).slice();
         wasm.__wbindgen_free(r0, r1 * 1, 1);
         return v3;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+
+/**
+* @param {Uint8Array} data
+* @returns {Uint8Array}
+*/
+export function sha256(data) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.sha256(retptr, ptr0, len0);
+        var r0 = getInt32Memory0()[retptr / 4 + 0];
+        var r1 = getInt32Memory0()[retptr / 4 + 1];
+        var v2 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_free(r0, r1 * 1, 1);
+        return v2;
     } finally {
         wasm.__wbindgen_add_to_stack_pointer(16);
     }
@@ -192,8 +273,8 @@ async function __wbg_load(module, imports) {
 function __wbg_get_imports() {
     const imports = {};
     imports.wbg = {};
-    imports.wbg.__wbindgen_error_new = function(arg0, arg1) {
-        const ret = new Error(getStringFromWasm0(arg0, arg1));
+    imports.wbg.__wbindgen_string_new = function(arg0, arg1) {
+        const ret = getStringFromWasm0(arg0, arg1);
         return addHeapObject(ret);
     };
     imports.wbg.__wbindgen_throw = function(arg0, arg1) {

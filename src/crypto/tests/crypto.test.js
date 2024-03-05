@@ -31,3 +31,14 @@ test("decrypt", () => {
 
     assert.deepEqual(plaintext2, plaintext);
 });
+
+test("passEncrypt", () => {
+    let salt = fromHex("b3e94eb6bba5bc462aab92fd86eb9d9f939320a60ae46e690907918ef2ee3aec");
+    let pass = toUtf8Bytes("hackme");
+    let plaintext = toUtf8Bytes("Be sure to drink your Ovaltine");
+    let expectedHash = fromHex("bef8d086931a2be31875839474b455fb6a9bfa0fbb6669dbeb8a86e51be0c9bd");
+    let ciphertext = crypto.passEncrypt(plaintext, pass, salt);
+    let gotHash = crypto.sha256(ciphertext);
+    assert.equal(ciphertext.length, 98);
+    assert.deepEqual(gotHash, expectedHash);
+});
