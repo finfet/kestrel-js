@@ -3,11 +3,11 @@ import { toUtf8Bytes } from "kestrel-crypto/utils";
 
 const ANIMATION_DURATION = 200;
 
-const workerMsgNames = {
+const workerMsgActions = {
     passEncrypt: "pass_encrypt"
 }
 
-const navStates = {
+const appNavStates = {
     encrypt: 0,
     decrypt: 1,
     contacts: 2
@@ -20,6 +20,10 @@ const encryptNavStates = {
 }
 
 const initialState = {
+    appNavState: appNavStates.encrypt,
+    encryptNavState: encryptNavStates.start,
+    workerLoading: true,
+    hasError: null,
     passEncryptResult: "",
     passEncryptLoading: false
 }
@@ -40,9 +44,9 @@ function NavBar({ encryptClick, decryptClick, contactsClick, active }) {
         <div className="mt-3 pb-3">
             <ul className="nav">
                 <li className="nav-title"><a className="nav-link" href="/">Kestrel</a></li>
-                <li onClick={encryptClick} className={"nav-button " + (active == navStates.encrypt ? "nav-button-active" : "")}>Encrypt</li>
-                <li onClick={decryptClick} className={"nav-button " + (active == navStates.decrypt ? "nav-button-active" : "")}>Decrypt</li>
-                <li onClick={contactsClick} className={"nav-button nav-button-end " + (active == navStates.contacts ? "nav-button-active" : "")}>Contacts</li>
+                <li onClick={encryptClick} className={"nav-button " + (active == appNavStates.encrypt ? "nav-button-active" : "")}>Encrypt</li>
+                <li onClick={decryptClick} className={"nav-button " + (active == appNavStates.decrypt ? "nav-button-active" : "")}>Decrypt</li>
+                <li onClick={contactsClick} className={"nav-button nav-button-end " + (active == appNavStates.contacts ? "nav-button-active" : "")}>Contacts</li>
             </ul>
         </div>
     )
@@ -78,10 +82,11 @@ function KeyEncryptPage() {
     )
 }
 
-function PassEncryptPage({ sendMessage, msgId, passEncryptResult, passEncryptLoading }) {
-    const [dkAnimStart, setDkAnimStart] = useState(false);
-    const [dkAnimMet, setDkAnimMet] = useState(false);
-    const [unlockClicked, setUnlockClicked] = useState(false);
+function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading }) {
+    const [peAnimStart, setPeAnimStart] = useState(false);
+    const [peAnimMet, setPeAnimMet] = useState(false);
+    const [encryptClicked, setEncryptClicked] = useState(false);
+    const [fileDownloaded, setFileDownloaded] = useState(false);
 
     const [plaintextFile, setPlaintextFile] = useState(null);
     const [password, setPassword] = useState("");
@@ -89,49 +94,64 @@ function PassEncryptPage({ sendMessage, msgId, passEncryptResult, passEncryptLoa
     const [validationError, setValidationError] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
 
-    const dkShowSpinner = passEncryptLoading || (dkAnimStart && !dkAnimMet);
-    const encryptDisabled = validationError || dkShowSpinner;
+    const peShowSpinner = passEncryptLoading || (peAnimStart && !peAnimMet);
+    const encryptDisabled = validationError || peShowSpinner;
 
-    let unlock = "";
-    if (unlockClicked) {
-        unlock = passEncryptResult;
-    }
+    useEffect(() => {
+        if (fileDownloaded) {
+            if (passEncryptResult && passEncryptResult.url) {
+                setTimeout(() => {
+                    URL.revokeObjectURL(passEncryptResult.url);
+                }, 0);
+            }
+        }
+    }, [fileDownloaded]);
 
     function fileChange(event) {
+        setEncryptClicked(false);
         setValidationError(false);
         setPlaintextFile(event.target.files[0]);
     }
 
     function passwordChange(event) {
+        setEncryptClicked(false);
         setValidationError(false);
         setPassword(event.target.value);
     }
 
     function confirmPasswordChange(event) {
+        setEncryptClicked(false);
         setValidationError(false);
         setConfirmPassword(event.target.value);
     }
 
     function encryptClick(event) {
         event.preventDefault();
-        if (plaintextFile) {
-            console.log("plaintextFile:", plaintextFile.name);
+        if (!plaintextFile) {
+            setValidationError(true);
+            setErrorMsg("Please select a file");
+            return;
         }
         if (password != confirmPassword) {
             setValidationError(true);
             setErrorMsg("Passwords do not match");
             return;
         }
-        console.log("password:", password);
-        console.log("confirm :", confirmPassword);
-        setDkAnimStart(true);
-        setDkAnimMet(false);
-        setUnlockClicked(true);
+        setPeAnimStart(true);
+        setPeAnimMet(false);
+        setFileDownloaded(false);
+        setEncryptClicked(true);
         setTimeout(() => {
-            setDkAnimStart(false);
-            setDkAnimMet(true);
+            setPeAnimStart(false);
+            setPeAnimMet(true);
         }, ANIMATION_DURATION);
-        sendMessage(msgId, "scrypt", workerMsgNames.passEncrypt, [toUtf8Bytes(password)]);
+        sendMessage(workerMsgActions.passEncrypt, [plaintextFile, toUtf8Bytes(password)]);
+    }
+
+    function fileDownloadClick() {
+        setFileDownloaded(true);
+        setEncryptClicked(false);
+        return true;
     }
 
     return (
@@ -156,10 +176,17 @@ function PassEncryptPage({ sendMessage, msgId, passEncryptResult, passEncryptLoa
                 }
                 <div className="pt-3">
                     <button onClick={encryptClick} disabled={encryptDisabled}>Encrypt</button>
-                    { dkShowSpinner ? (
+                    { peShowSpinner ? (
                             <DotLoader classes={"ml-1"} />
                         ) : (
-                            <span style={{paddingLeft: 0.5 + "rem"}}>{unlock}</span>
+                            <>
+                                {encryptClicked ? (
+                                    <span className={"ml-4"}><a href={passEncryptResult.url} download={passEncryptResult.filename} onClick={fileDownloadClick}>{passEncryptResult.filename}</a></span>
+                                ) : (
+                                    <span></span>
+                                )
+                            }
+                            </>
                         )
                     }
                 </div>
@@ -169,80 +196,130 @@ function PassEncryptPage({ sendMessage, msgId, passEncryptResult, passEncryptLoa
 }
 
 function EncryptPage(props) {
-    if (props.encryptNavState == encryptNavStates.key) {
+    if (props.state.encryptNavState == encryptNavStates.key) {
         return (
             <KeyEncryptPage />
         );
-    } else if (props.encryptNavState == encryptNavStates.pass) {
+    } else if (props.state.encryptNavState == encryptNavStates.pass) {
         return (
             <PassEncryptPage
                 sendMessage={props.sendMessage}
-                msgId={props.messageId}
                 passEncryptResult={props.state.passEncryptResult}
                 passEncryptLoading={props.state.passEncryptLoading} />
         );
     } else {
         return (
             <div>
-                <button onClick={() => props.encryptNavClick(true)}>Use Key</button>
-                <button className="ml-4" onClick={() => props.encryptNavClick(false)}>Use Password</button>
+                <button onClick={() => props.encryptPageSelect(true)}>Use Key</button>
+                <button className="ml-4" onClick={() => props.encryptPageSelect(false)}>Use Password</button>
             </div>
         );
     }
 }
 
+function AppNavPage({ state, encryptPageSelect, sendMessage }) {
+    if (state.appNavState == appNavStates.encrypt) {
+        return (
+            <EncryptPage
+                sendMessage={sendMessage}
+                encryptPageSelect={encryptPageSelect}
+                state={state} />
+        );
+    } else if (state.appNavState == appNavStates.decrypt) {
+        return (
+            <DecryptPage />
+        );
+    } else if (state.appNavState == appNavStates.contacts) {
+        return (
+            <ContactsPage />
+        );
+    } else {
+        return (
+            <div>Error: Invalid State</div>
+        );
+    }
+}
+
 function workerReducer(state, action) {
-    if (action.action == "send" && action.msg.name == workerMsgNames.passEncrypt) {
+    if (action.action == "send" && action.msg.action == workerMsgActions.passEncrypt) {
         return {
             ...state,
+            hasError: null,
             passEncryptLoading: true
         };
-    } else if (action.action == "recv" && action.msg.name == workerMsgNames.passEncrypt) {
+    } else if (action.action == "recv" && action.msg.action == workerMsgActions.passEncrypt) {
         return {
             ...state,
             passEncryptLoading: false,
             passEncryptResult: action.msg.result
         };
+    } else if (action.action == "recv" && action.msg.action == "init") {
+        return {
+            ...state,
+            workerLoading: false
+        };
+    } else if (action.action == "recv" && action.msg.action == "exception") {
+        return {
+            ...state,
+            hasError: msg.result
+        };
+    } else if (action.action == "nav_encrypt_clicked") {
+        return {
+            ...state,
+            appNavState: appNavStates.encrypt,
+            encryptNavState: encryptNavStates.start
+        };
+    } else if (action.action == "nav_decrypt_clicked") {
+        return {
+            ...state,
+            appNavState: appNavStates.decrypt
+        };
+    } else if (action.action == "nav_contacts_clicked") {
+        return {
+            ...state,
+            appNavState: appNavStates.contacts
+        };
+    } else if (action.action == "nav_encrypt_select_key") {
+        return {
+            ...state,
+            encryptNavState: encryptNavStates.key
+        };
+    } else if (action.action == "nav_encrypt_select_pass") {
+        return {
+            ...state,
+            encryptNavState: encryptNavStates.pass
+        };
     } else {
-        throw new Error("Unsupported crypto worker state action");
+        return {
+            ...state,
+            hasError: { type: "invalid_state", msg: "Invalid state reached" }
+        };
     }
 }
 
 export default function App() {
     const [cryptoWorker, setCryptoWorker] = useState(null);
     const [state, dispatch] = useReducer(workerReducer, initialState);
-    const [navState, setNavState] = useState(navStates.encrypt);
-    const [encryptNavState, setEncryptNavState] = useState(encryptNavStates.start);
-    const [hasError, setHasError] = useState(null);
 
-    const [workerLoading, setWorkerLoading] = useState(true);
     const [animStart, setAnimStart] = useState(false);
     const [animMet, setAnimMet] = useState(false);
-    const [messageId, setMessageId] = useState(0);
 
-    const showSpinner = workerLoading || (animStart && !animMet);
+    const showSpinner = state.workerLoading || (animStart && !animMet);
 
     useEffect(() => {
         const worker = new Worker("worker.bundle.js", { type: "module" });
         worker.onmessage = e => {
             let msg = e.data;
-            if (msg.type == "init") {
-                setWorkerLoading(false);
-            } else if (msg.type == "exception") {
-                processError(msg);
-            } else {
-                dispatch({ action: "recv", msg: msg });
-            }
+            dispatch({ action: "recv", msg: msg });
         }
         worker.onerror = (_e) => {
             const msg = {
-                id: 0,
-                type: "exception",
+                action: "exception",
                 result: {
-                    type: "worker-onerror", msg: "Worker communication failed."
+                    type: "worker_onerror", msg: "Worker communication failed."
                 }
             };
-            processError(msg);
+            dispatch({ action: "recv", msg: msg });
         }
         setCryptoWorker(worker);
         setAnimStart(true);
@@ -257,55 +334,44 @@ export default function App() {
         }
     }, []);
 
-    function sendMessage(id, type, name, args) {
-        setHasError(null);
-        let msgId = id + 1;
+    function sendMessage(action, args) {
         const msg = {
-            id: id,
-            type: type,
-            name: name,
+            action: action,
             args: args
         };
-        setMessageId(msgId);
         dispatch({ action: "send", msg: msg });
         cryptoWorker.postMessage(msg);
     }
 
-    function processError(msg) {
-        let result = msg.result;
-        setHasError(result);
+    function navEncryptClick() {
+        dispatch({ action: "nav_encrypt_clicked" });
     }
 
-    function encryptClick() {
-        setEncryptNavState(encryptNavStates.start);
-        setNavState(navStates.encrypt);
+    function navDecryptClick() {
+        dispatch({ action: "nav_decrypt_clicked" });
     }
 
-    function decryptClick() {
-        setNavState(navStates.decrypt);
+    function navContactsClick() {
+        dispatch({ action: "nav_contacts_clicked" });
     }
 
-    function contactsClick() {
-        setNavState(navStates.contacts);
-    }
-
-    function encryptNavClick(key) {
+    function encryptPageSelect(key) {
         if (key) {
-            setEncryptNavState(encryptNavStates.key);
+            dispatch({ action: "nav_encrypt_select_key" });
         } else {
-            setEncryptNavState(encryptNavStates.pass);
+            dispatch({ action: "nav_encrypt_select_pass" });
         }
     }
 
-    if (hasError) {
+    if (state.hasError) {
         return (
             <div>
                 <NavBar
-                    encryptClick={encryptClick}
-                    decryptClick={decryptClick}
-                    contactsClick={contactsClick}
-                    active={navState} />
-                <div className="error">Error: {hasError.msg}</div>
+                    encryptClick={navEncryptClick}
+                    decryptClick={navDecryptClick}
+                    contactsClick={navContactsClick}
+                    active={state.appNavState} />
+                <div className="error">Error: {state.hasError.msg}</div>
             </div>
         )
     }
@@ -319,46 +385,18 @@ export default function App() {
         )
     }
 
-    if (navState == navStates.encrypt) {
-        return (
-            <div>
-                <NavBar
-                    encryptClick={encryptClick}
-                    decryptClick={decryptClick}
-                    contactsClick={contactsClick}
-                    active={navState} />
-                <EncryptPage
-                    sendMessage={sendMessage}
-                    messageId={messageId}
-                    encryptNavState={encryptNavState}
-                    encryptNaveStates={encryptNavStates}
-                    encryptNavClick={encryptNavClick}
-                    state={state} />
-            </div>
-        );
-    } else if (navState == navStates.decrypt) {
-        return (
-            <div>
-                <NavBar
-                    encryptClick={encryptClick}
-                    decryptClick={decryptClick}
-                    contactsClick={contactsClick}
-                    active={navState} />
-                <DecryptPage />
-            </div>
-        );
-    } else if (navState == navStates.contacts) {
-        return (
-            <div>
-                <NavBar
-                    encryptClick={encryptClick}
-                    decryptClick={decryptClick}
-                    contactsClick={contactsClick}
-                    active={navState} />
-                <ContactsPage />
-            </div>
-        )
-    } else {
-        return (<div>Error: Invalid State</div>);
-    }
+    return (
+        <>
+        <NavBar
+            encryptClick={navEncryptClick}
+            decryptClick={navDecryptClick}
+            contactsClick={navContactsClick}
+            active={state.appNavState} />
+        <AppNavPage
+            state={state}
+            sendMessage={sendMessage}
+            encryptPageSelect={encryptPageSelect}
+        />
+        </>
+    );
 }
