@@ -22,9 +22,13 @@ const encryptNavStates = {
 const initialState = {
     appNavState: appNavStates.encrypt,
     encryptNavState: encryptNavStates.start,
-    workerLoading: true,
+    worker: null,
+    workerAnimStart: false,
+    workerAnimMet: false,
+    workerLoading: false,
+    workerReload: false,
     hasError: null,
-    passEncryptResult: "",
+    passEncryptResult: null,
     passEncryptLoading: false
 }
 
@@ -82,11 +86,11 @@ function KeyEncryptPage() {
     )
 }
 
-function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading }) {
+function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, resetPassEncryptResult, reloadWorker }) {
     const [peAnimStart, setPeAnimStart] = useState(false);
     const [peAnimMet, setPeAnimMet] = useState(false);
-    const [encryptClicked, setEncryptClicked] = useState(false);
-    const [fileDownloaded, setFileDownloaded] = useState(false);
+    const [resultShown, setResultShown] = useState(false);
+    const [pageReset, setPageReset] = useState(false);
 
     const [plaintextFile, setPlaintextFile] = useState(null);
     const [password, setPassword] = useState("");
@@ -95,32 +99,26 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading })
     const [errorMsg, setErrorMsg] = useState("");
 
     const peShowSpinner = passEncryptLoading || (peAnimStart && !peAnimMet);
-    const encryptDisabled = validationError || peShowSpinner;
+    const encryptDisabled = validationError || peShowSpinner || resultShown;
 
     useEffect(() => {
-        if (fileDownloaded) {
-            if (passEncryptResult && passEncryptResult.url) {
-                setTimeout(() => {
-                    URL.revokeObjectURL(passEncryptResult.url);
-                }, 0);
-            }
+        if (passEncryptResult) {
+            URL.revokeObjectURL(passEncryptResult.url);
+            resetPassEncryptResult();
         }
-    }, [fileDownloaded]);
+    }, [pageReset]);
 
     function fileChange(event) {
-        setEncryptClicked(false);
         setValidationError(false);
         setPlaintextFile(event.target.files[0]);
     }
 
     function passwordChange(event) {
-        setEncryptClicked(false);
         setValidationError(false);
         setPassword(event.target.value);
     }
 
     function confirmPasswordChange(event) {
-        setEncryptClicked(false);
         setValidationError(false);
         setConfirmPassword(event.target.value);
     }
@@ -139,8 +137,7 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading })
         }
         setPeAnimStart(true);
         setPeAnimMet(false);
-        setFileDownloaded(false);
-        setEncryptClicked(true);
+        setResultShown(true);
         setTimeout(() => {
             setPeAnimStart(false);
             setPeAnimMet(true);
@@ -148,49 +145,65 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading })
         sendMessage(workerMsgActions.passEncrypt, [plaintextFile, toUtf8Bytes(password)]);
     }
 
-    function fileDownloadClick() {
-        setFileDownloaded(true);
-        setEncryptClicked(false);
-        return true;
+    function reset() {
+        setResultShown(false);
+        if (pageReset) {
+            setPageReset(false);
+        } else {
+            setPageReset(true);
+        }
+        reloadWorker();
     }
 
     return (
         <div>
             <h4>Encrypt with Password</h4>
-            <form className="pb-4">
-                <div className="form-group pt-3">
-                    <label htmlFor="plaintext-file">Select File</label>
-                    <input className="file-input" type="file" id="plaintext-file" name="plaintext-file" onChange={fileChange} />
-                </div>
-                <div className="form-group pt-3">
-                    <label htmlFor="password">Password</label>
-                    <input type="password" id="password" name="password" onChange={passwordChange} />
-                </div>
-                <div className="form-group pt-1">
-                    <label htmlFor="confirm-password">Confirm</label>
-                    <input type="password" id="confirm-password" name="confirm-password" onChange={confirmPasswordChange} />
-                </div>
-                { validationError ? (
-                    <div className="mt-3 error">Error: {errorMsg}</div>
-                    ) : <div className="mt-3 hidden"><span>OK</span></div>
-                }
-                <div className="pt-3">
+            <div className="form-group pt-3">
+                <label htmlFor="plaintext-file">Select File</label>
+                <input className="file-input" type="file" id="plaintext-file" name="plaintext-file" onChange={fileChange} />
+            </div>
+            <div className="form-group pt-3">
+                <label htmlFor="password">Password</label>
+                <input type="password" id="password" name="password" onChange={passwordChange} />
+            </div>
+            <div className="form-group pt-1">
+                <label htmlFor="confirm-password">Confirm</label>
+                <input type="password" id="confirm-password" name="confirm-password" onChange={confirmPasswordChange} />
+            </div>
+            { validationError ? (
+                <div className="mt-3 error">Error: {errorMsg}</div>
+                ) : <div className="mt-3 hidden"><span>OK</span></div>
+            }
+            <div className="pt-3 row-container">
+                <div>
                     <button onClick={encryptClick} disabled={encryptDisabled}>Encrypt</button>
-                    { peShowSpinner ? (
-                            <DotLoader classes={"ml-1"} />
-                        ) : (
-                            <>
-                                {encryptClicked ? (
-                                    <span className={"ml-4"}><a href={passEncryptResult.url} download={passEncryptResult.filename} onClick={fileDownloadClick}>{passEncryptResult.filename}</a></span>
-                                ) : (
-                                    <span></span>
-                                )
-                            }
-                            </>
-                        )
-                    }
                 </div>
-            </form>
+                { peShowSpinner ? (
+                        <div>
+                            <DotLoader classes={"ml-1"} />
+                        </div>
+                    ) : (
+                        <>
+                        { resultShown ? (
+                            <>
+                            <div className="pt-2">
+                                <a href={passEncryptResult.url} style={{display: "inline-block"}} download={passEncryptResult.filename}>
+                                    <img src="./assets/img/download.svg" alt="Download" style={{display: "inline-block", verticalAlign: "middle"}}></img>{passEncryptResult.filename}
+                                </a>
+                            </div>
+                            <div>
+                                <button className="icon-button icon-reset" onClick={reset}>
+                                </button>
+                            </div>
+                            </>
+                            ) : (
+                                <div></div>
+                            )
+                        }
+                        </>
+                    )
+                }
+            </div>
         </div>
     )
 }
@@ -205,7 +218,9 @@ function EncryptPage(props) {
             <PassEncryptPage
                 sendMessage={props.sendMessage}
                 passEncryptResult={props.state.passEncryptResult}
-                passEncryptLoading={props.state.passEncryptLoading} />
+                passEncryptLoading={props.state.passEncryptLoading}
+                resetPassEncryptResult={props.resetPassEncryptResult}
+                reloadWorker={props.reloadWorker} />
         );
     } else {
         return (
@@ -217,19 +232,21 @@ function EncryptPage(props) {
     }
 }
 
-function AppNavPage({ state, encryptPageSelect, sendMessage }) {
-    if (state.appNavState == appNavStates.encrypt) {
+function AppNavPage(props) {
+    if (props.state.appNavState == appNavStates.encrypt) {
         return (
             <EncryptPage
-                sendMessage={sendMessage}
-                encryptPageSelect={encryptPageSelect}
-                state={state} />
+                sendMessage={props.sendMessage}
+                encryptPageSelect={props.encryptPageSelect}
+                reloadWorker={props.reloadWorker}
+                resetPassEncryptResult={props.resetPassEncryptResult}
+                state={props.state} />
         );
-    } else if (state.appNavState == appNavStates.decrypt) {
+    } else if (props.state.appNavState == appNavStates.decrypt) {
         return (
             <DecryptPage />
         );
-    } else if (state.appNavState == appNavStates.contacts) {
+    } else if (props.state.appNavState == appNavStates.contacts) {
         return (
             <ContactsPage />
         );
@@ -262,6 +279,34 @@ function workerReducer(state, action) {
         return {
             ...state,
             hasError: msg.result
+        };
+    } else if (action.action == "reload_worker") {
+        let reload = true;
+        if (state.workerReload) {
+            reload = false;
+        }
+        return {
+            ...state,
+            workerReload: reload
+        };
+    } else if (action.action == "worker_load_start") {
+        return {
+            ...state,
+            worker: action.worker,
+            workerLoading: true,
+            workerAnimStart: true,
+            workerAnimMet: false
+        };
+    } else if (action.action == "worker_load_end") {
+        return {
+            ...state,
+            workerAnimStart: false,
+            workerAnimMet: true
+        };
+    } else if (action.action == "reset_pass_encrypt_result") {
+        return {
+            ...state,
+            passencryptResult: null
         };
     } else if (action.action == "nav_encrypt_clicked") {
         return {
@@ -298,13 +343,13 @@ function workerReducer(state, action) {
 }
 
 export default function App() {
-    const [cryptoWorker, setCryptoWorker] = useState(null);
     const [state, dispatch] = useReducer(workerReducer, initialState);
 
-    const [animStart, setAnimStart] = useState(false);
-    const [animMet, setAnimMet] = useState(false);
+    const showSpinner = state.workerLoading || (state.workerAnimStart && !state.workerAnimMet);
 
-    const showSpinner = state.workerLoading || (animStart && !animMet);
+    useEffect(() => {
+        reloadWorker();
+    }, []);
 
     useEffect(() => {
         const worker = new Worker("worker.bundle.js", { type: "module" });
@@ -321,18 +366,24 @@ export default function App() {
             };
             dispatch({ action: "recv", msg: msg });
         }
-        setCryptoWorker(worker);
-        setAnimStart(true);
+        dispatch({ action: "worker_load_start", worker: worker });
         setTimeout(() => {
-            setAnimMet(true);
-            setAnimStart(false);
+            dispatch({ action: "worker_load_end" });
         }, ANIMATION_DURATION);
         return () => {
-            if (cryptoWorker) {
-                cryptoWorker.terminate();
+            if (state.worker) {
+                state.worker.terminate();
             }
         }
-    }, []);
+    }, [state.workerReload]);
+
+    function reloadWorker() {
+        dispatch({ action: "reload_worker" });
+    }
+
+    function resetPassEncryptResult() {
+        dispatch({ action: "reset_pass_encrypt_result" });
+    }
 
     function sendMessage(action, args) {
         const msg = {
@@ -340,7 +391,7 @@ export default function App() {
             args: args
         };
         dispatch({ action: "send", msg: msg });
-        cryptoWorker.postMessage(msg);
+        state.worker.postMessage(msg);
     }
 
     function navEncryptClick() {
@@ -396,6 +447,8 @@ export default function App() {
             state={state}
             sendMessage={sendMessage}
             encryptPageSelect={encryptPageSelect}
+            resetPassEncryptResult={resetPassEncryptResult}
+            reloadWorker={reloadWorker}
         />
         </>
     );

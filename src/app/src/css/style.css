@@ -119,3 +119,36 @@ a.nav-link:visited {
     display: block;
     max-width: fit-content;
 }
+
+.row-container {
+    display: flex;
+    flex-direction: row;
+    gap: 32px;
+}
+
+.row-container > div {
+    flex: 0 1 auto;
+}
+
+.icon-button {
+    min-width: 40px;
+    min-height: 32px;
+}
+
+.icon-reset:enabled {
+    background-image: url("../img/reset.svg");
+    background-repeat: no-repeat;
+    background-origin: content-box;
+}
+
+.icon-reset:disabled {
+    background-image: url("../img/reset.svg");
+    background-repeat: no-repeat;
+    background-origin: content-box;
+}
+
+.icon-reset:hover:enabled {
+    background-image: url("../img/reset-white.svg");
+    background-repeat: no-repeat;
+    background-origin: content-box;
+}

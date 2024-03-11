@@ -5,7 +5,8 @@ function copyFiles() {
         { src: "src/html/index.html", dest: "dist/index.html"}
     ]
     const dirs = [
-        { src: "src/css", dest: "dist/css/" }
+        { src: "src/css", dest: "dist/assets/css/" },
+	    { src: "src/img", dest: "dist/assets/img/" }
     ]
 
     try {
