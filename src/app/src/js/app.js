@@ -1,4 +1,4 @@
-import { useState, useEffect, useReducer } from "react";
+import { useState, useEffect, useReducer, useRef } from "react";
 import { toUtf8Bytes } from "kestrel-crypto/utils";
 
 const ANIMATION_DURATION = 200;
@@ -33,6 +33,9 @@ const initialState = {
 }
 
 function DotLoader({ classes }) {
+    if (!classes) {
+        classes = "";
+    }
     return (
         <div className={`dot-loader ${classes}`}>
             <div></div>
@@ -90,9 +93,9 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
     const [peAnimStart, setPeAnimStart] = useState(false);
     const [peAnimMet, setPeAnimMet] = useState(false);
     const [resultShown, setResultShown] = useState(false);
-    const [pageReset, setPageReset] = useState(false);
 
     const [plaintextFile, setPlaintextFile] = useState(null);
+    const fileInputField = useRef(null);
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [validationError, setValidationError] = useState(false);
@@ -100,13 +103,6 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
 
     const peShowSpinner = passEncryptLoading || (peAnimStart && !peAnimMet);
     const encryptDisabled = validationError || peShowSpinner || resultShown;
-
-    useEffect(() => {
-        if (passEncryptResult) {
-            URL.revokeObjectURL(passEncryptResult.url);
-            resetPassEncryptResult();
-        }
-    }, [pageReset]);
 
     function fileChange(event) {
         setValidationError(false);
@@ -146,13 +142,26 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
     }
 
     function reset() {
-        setResultShown(false);
-        if (pageReset) {
-            setPageReset(false);
-        } else {
-            setPageReset(true);
+        const fileSize = plaintextFile.size;
+        if (passEncryptResult) {
+            URL.revokeObjectURL(passEncryptResult.url);
         }
-        reloadWorker();
+        resetPassEncryptResult();
+        setPeAnimStart(false);
+        setPeAnimMet(false);
+        setResultShown(false);
+        setPlaintextFile(null);
+        if (fileInputField) {
+            fileInputField.current.value = "";
+        }
+        setPassword("");
+        setConfirmPassword("");
+        setValidationError(false);
+        setErrorMsg("");
+        if (fileSize > (100 * (1024 * 1024))) {
+            console.log("reloading worker");
+            reloadWorker();
+        }
     }
 
     return (
@@ -160,15 +169,15 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
             <h4>Encrypt with Password</h4>
             <div className="form-group pt-3">
                 <label htmlFor="plaintext-file">Select File</label>
-                <input className="file-input" type="file" id="plaintext-file" name="plaintext-file" onChange={fileChange} />
+                <input className="file-input" type="file" id="plaintext-file" name="plaintext-file" ref={fileInputField} onChange={fileChange} />
             </div>
             <div className="form-group pt-3">
                 <label htmlFor="password">Password</label>
-                <input type="password" id="password" name="password" onChange={passwordChange} />
+                <input type="password" id="password" name="password" value={password} onChange={passwordChange} />
             </div>
             <div className="form-group pt-1">
                 <label htmlFor="confirm-password">Confirm</label>
-                <input type="password" id="confirm-password" name="confirm-password" onChange={confirmPasswordChange} />
+                <input type="password" id="confirm-password" name="confirm-password" value={confirmPassword} onChange={confirmPasswordChange} />
             </div>
             { validationError ? (
                 <div className="mt-3 error">Error: {errorMsg}</div>
@@ -303,10 +312,15 @@ function workerReducer(state, action) {
             workerAnimStart: false,
             workerAnimMet: true
         };
+    } else if (action.action == "worker_terminate") {
+        return {
+            ...state,
+            worker: null,
+        };
     } else if (action.action == "reset_pass_encrypt_result") {
         return {
             ...state,
-            passencryptResult: null
+            passEncryptResult: null
         };
     } else if (action.action == "nav_encrypt_clicked") {
         return {
@@ -371,9 +385,8 @@ export default function App() {
             dispatch({ action: "worker_load_end" });
         }, ANIMATION_DURATION);
         return () => {
-            if (state.worker) {
-                state.worker.terminate();
-            }
+            worker.terminate();
+            dispatch({ action: "worker_terminate" });
         }
     }, [state.workerReload]);
 

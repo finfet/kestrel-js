@@ -1,16 +1,6 @@
 import { Crypto } from "kestrel-crypto";
 import { secureRandom, toHex } from "kestrel-crypto/utils";
 
-
-let crypto = null;
-
-function start() {
-    Crypto.createInstance().then((c) => {
-        crypto = c;
-        self.postMessage({ action: "init", result: true });
-    });
-}
-
 self.onmessage = (e) => {
     const msg = e.data;
     try {
@@ -28,6 +18,7 @@ self.onmessage = (e) => {
 }
 
 async function passEncrypt(msg) {
+    const crypto = await Crypto.createInstance();
     const inputFile = msg.args[0];
     const filename = `${inputFile.name}.ktl`;
     const password = msg.args[1];
@@ -46,4 +37,4 @@ async function passEncrypt(msg) {
     self.postMessage(message);
 }
 
-start();
+self.postMessage({ action: "init", result: true });
