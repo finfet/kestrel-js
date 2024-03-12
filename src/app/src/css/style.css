@@ -8,6 +8,12 @@ button {
     color: #000;
     background: #fff;
     box-shadow: 4px 4px #808080;
+    transition: 0.12s all;
+}
+
+button:active {
+    transform: scale(0.98);
+    box-shadow: 2px 2px #a0a0a0;
 }
 
 button:disabled {

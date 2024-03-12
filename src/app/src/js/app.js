@@ -89,12 +89,22 @@ function KeyEncryptPage() {
     )
 }
 
+function SelectEncryptPage({ makePageSelection }) {
+    return (
+        <div>
+            <button onClick={() => makePageSelection(true)}>Use Key</button>
+            <button className="ml-4" onClick={() => makePageSelection(false)}>Use Password</button>
+        </div>
+    );
+}
+
 function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, resetPassEncryptResult, reloadWorker }) {
     const [peAnimStart, setPeAnimStart] = useState(false);
     const [peAnimMet, setPeAnimMet] = useState(false);
     const [resultShown, setResultShown] = useState(false);
 
     const [plaintextFile, setPlaintextFile] = useState(null);
+    const [fileSize, setFileSize] = useState(0);
     const fileInputField = useRef(null);
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -105,8 +115,10 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
     const encryptDisabled = validationError || peShowSpinner || resultShown;
 
     function fileChange(event) {
+        const file = event.target.files[0];
         setValidationError(false);
-        setPlaintextFile(event.target.files[0]);
+        setFileSize(file.size);
+        setPlaintextFile(file);
     }
 
     function passwordChange(event) {
@@ -126,6 +138,11 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
             setErrorMsg("Please select a file");
             return;
         }
+        if (fileSize > (1024 * (1024 * 1024))) {
+            setValidationError(true);
+            setErrorMsg("Maximum file size is 1GiB");
+            return;
+        }
         if (password != confirmPassword) {
             setValidationError(true);
             setErrorMsg("Passwords do not match");
@@ -142,7 +159,6 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
     }
 
     function reset() {
-        const fileSize = plaintextFile.size;
         if (passEncryptResult) {
             URL.revokeObjectURL(passEncryptResult.url);
         }
@@ -151,6 +167,7 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
         setPeAnimMet(false);
         setResultShown(false);
         setPlaintextFile(null);
+        setFileSize(0);
         if (fileInputField) {
             fileInputField.current.value = "";
         }
@@ -181,7 +198,7 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
             </div>
             { validationError ? (
                 <div className="mt-3 error">Error: {errorMsg}</div>
-                ) : <div className="mt-3 hidden"><span>OK</span></div>
+                ) : <div className="mt-3 error hidden">OK</div>
             }
             <div className="pt-3 row-container">
                 <div>
@@ -189,7 +206,7 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
                 </div>
                 { peShowSpinner ? (
                         <div>
-                            <DotLoader classes={"ml-1"} />
+                            <DotLoader classes={"ml-1 mt-1"} />
                         </div>
                     ) : (
                         <>
@@ -217,56 +234,7 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
     )
 }
 
-function EncryptPage(props) {
-    if (props.state.encryptNavState == encryptNavStates.key) {
-        return (
-            <KeyEncryptPage />
-        );
-    } else if (props.state.encryptNavState == encryptNavStates.pass) {
-        return (
-            <PassEncryptPage
-                sendMessage={props.sendMessage}
-                passEncryptResult={props.state.passEncryptResult}
-                passEncryptLoading={props.state.passEncryptLoading}
-                resetPassEncryptResult={props.resetPassEncryptResult}
-                reloadWorker={props.reloadWorker} />
-        );
-    } else {
-        return (
-            <div>
-                <button onClick={() => props.encryptPageSelect(true)}>Use Key</button>
-                <button className="ml-4" onClick={() => props.encryptPageSelect(false)}>Use Password</button>
-            </div>
-        );
-    }
-}
-
-function AppNavPage(props) {
-    if (props.state.appNavState == appNavStates.encrypt) {
-        return (
-            <EncryptPage
-                sendMessage={props.sendMessage}
-                encryptPageSelect={props.encryptPageSelect}
-                reloadWorker={props.reloadWorker}
-                resetPassEncryptResult={props.resetPassEncryptResult}
-                state={props.state} />
-        );
-    } else if (props.state.appNavState == appNavStates.decrypt) {
-        return (
-            <DecryptPage />
-        );
-    } else if (props.state.appNavState == appNavStates.contacts) {
-        return (
-            <ContactsPage />
-        );
-    } else {
-        return (
-            <div>Error: Invalid State</div>
-        );
-    }
-}
-
-function workerReducer(state, action) {
+function reducer(state, action) {
     if (action.action == "send" && action.msg.action == workerMsgActions.passEncrypt) {
         return {
             ...state,
@@ -357,7 +325,7 @@ function workerReducer(state, action) {
 }
 
 export default function App() {
-    const [state, dispatch] = useReducer(workerReducer, initialState);
+    const [state, dispatch] = useReducer(reducer, initialState);
 
     const showSpinner = state.workerLoading || (state.workerAnimStart && !state.workerAnimMet);
 
@@ -419,7 +387,7 @@ export default function App() {
         dispatch({ action: "nav_contacts_clicked" });
     }
 
-    function encryptPageSelect(key) {
+    function makeEncryptPageSelection(key) {
         if (key) {
             dispatch({ action: "nav_encrypt_select_key" });
         } else {
@@ -449,6 +417,29 @@ export default function App() {
         )
     }
 
+    let selectedPage = (<div>Error: Invalid State</div>);
+
+    if (state.appNavState == appNavStates.encrypt) {
+        if (state.encryptNavState == encryptNavStates.key) {
+            selectedPage = (<KeyEncryptPage />);
+        } else if (state.encryptNavState == encryptNavStates.pass) {
+            selectedPage = (
+                <PassEncryptPage
+                    sendMessage={sendMessage}
+                    passEncryptResult={state.passEncryptResult}
+                    passEncryptLoading={state.passEncryptLoading}
+                    resetPassEncryptResult={resetPassEncryptResult}
+                    reloadWorker={reloadWorker} />
+            );
+        } else {
+            selectedPage = (<SelectEncryptPage makePageSelection={makeEncryptPageSelection} />);
+        }
+    } else if (state.appNavState == appNavStates.decrypt) {
+        selectedPage = (<DecryptPage />);
+    } else if (state.appNavState == appNavStates.contacts) {
+        selectedPage = (<ContactsPage />);
+    }
+
     return (
         <>
         <NavBar
@@ -456,13 +447,7 @@ export default function App() {
             decryptClick={navDecryptClick}
             contactsClick={navContactsClick}
             active={state.appNavState} />
-        <AppNavPage
-            state={state}
-            sendMessage={sendMessage}
-            encryptPageSelect={encryptPageSelect}
-            resetPassEncryptResult={resetPassEncryptResult}
-            reloadWorker={reloadWorker}
-        />
+        {selectedPage}
         </>
     );
 }
