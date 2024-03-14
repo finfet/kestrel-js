@@ -25,6 +25,6 @@
     "license": "MIT",
     "devDependencies": {
         "@rollup/plugin-wasm": "^6.2.2",
-        "rollup": "^4.12.1"
+        "rollup": "^4.13.0"
     }
 }

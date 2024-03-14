@@ -67,14 +67,32 @@ input.file-input {
 
 input[type="file"]::file-selector-button {
     border: 2px solid black;
-    padding: 0;
+    padding: 6px 5px 2px 5px;
     min-width: 75px;
     min-height: 25px;
+    margin-left: 0px;
+    margin-right: 16px;
+    margin-bottom: 8px;
+    position: relative;
     overflow: hidden;
     text-overflow: ellipsis;
     color: #000;
+    font-size: 16px;
+    font-family: "Helvetica", "Arial", sans-serif;
     background: #fff;
     cursor: pointer;
+    box-shadow: 4px 4px #808080;
+    transition: 0.12s all;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background: #900000;
+    color: #fff;
+}
+
+input[type="file"]::file-selector-button:active {
+    transform: scale(0.98);
+    box-shadow: 2px 2px #a0a0a0;
 }
 
 ul.nav {

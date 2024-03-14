@@ -99,6 +99,24 @@ export class Crypto {
         return ciphertext;
     }
 
+    /**
+     * Kestrel decryption using a key derived from a password
+     * @param {Uint8Array} ciphertext Ciphertext to decrypt
+     * @param {Uint8Array} password Password
+     * @param {Number} file_format Password file format version. v1 is 0x20
+     * @returns {Uint8Array} Plaintext
+     */
+    passDecrypt(ciphertext, password, file_format = 0x20) {
+        let plaintext;
+        try {
+            plaintext = kcrypto.pass_decrypt(ciphertext, password, file_format);
+        } catch (wasmError) {
+            let err = this.getError(wasmError);
+            throw err;
+        }
+        return plaintext;
+    }
+
     getError(wasmError) {
         let tokens = wasmError.split(";", 1);
         if (tokens.length != 2) {
