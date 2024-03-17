@@ -113,6 +113,7 @@ function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoading, r
 
     const fileInputField = useRef(null);
     const [hasError, setHasError] = useState(false);
+    const [decryptError, setDecryptError] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
 
     const [fileSize, setFileSize] = useState(0);
@@ -129,28 +130,29 @@ function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoading, r
     const maxFileSize = s1GiB + overhead;
 
     useEffect(() => {
-        if (passDecryptResult && passDecryptResult.exception && !resultShown) {
+        if (passDecryptResult && passDecryptResult.exception) {
             let ex = passDecryptResult.exception;
-            setHasError(true);
+            setDecryptError(true);
+            setResultShown(false);
             if (ex.name == "DecryptError::ChaPolyDecrypt") {
                 setErrorMsg("Decrypt Failed. Check password used.");
             } else {
                 setErrorMsg(ex.message);
             }
-        } else if (passDecryptResult && !passDecryptResult.exception) {
-            setResultShown(true);
         }
     }, [passDecryptResult]);
 
     function fileChange(event) {
         const file = event.target.files[0];
         setHasError(false);
+        setDecryptError(false);
         setFileSize(file.size);
         setCiphertextFile(file);
     }
 
     function passwordChange(event) {
         setHasError(false);
+        setDecryptError(false);
         setPassword(event.target.value);
     }
 
@@ -169,6 +171,9 @@ function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoading, r
         }
 
         setAnim({ start: true, met: false });
+        setHasError(false);
+        setDecryptError(false);
+        setResultShown(true);
         setTimeout(() => {
             setAnim({ start: false, met: true });
         }, ANIMATION_DURATION);
@@ -189,9 +194,7 @@ function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoading, r
         setPassword("");
         setHasError(false);
         setErrorMsg("");
-        if (fileSize > 1) {
-            // TODO: Rerender isn't happening here so it looks
-            // like the screen has old date.
+        if (fileSize > s100MiB) {
             reloadWorker();
         }
         setFileSize(0);
@@ -208,7 +211,7 @@ function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoading, r
                 <label htmlFor="password">Password</label>
                 <input type="password" id="password" name="password" value={password} onChange={passwordChange} />
             </div>
-            { hasError ? (
+            { (hasError || decryptError) ? (
                     <div className="mt-3 error">Error: {errorMsg}</div>
                 ) : (
                     <div className="mt-3 error hidden">OK</div>
