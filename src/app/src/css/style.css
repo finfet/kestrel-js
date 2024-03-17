@@ -1,3 +1,17 @@
+#app {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+}
+
+#app .content {
+    flex: 1;
+}
+
+#app .footer {
+    padding-top: 2rem;
+}
+
 button {
     border: 2px solid black;
     padding: 2px 5px 2px 5px;

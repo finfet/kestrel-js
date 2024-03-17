@@ -104,6 +104,7 @@ export class Crypto {
      * @param {Uint8Array} ciphertext Ciphertext to decrypt
      * @param {Uint8Array} password Password
      * @param {Number} file_format Password file format version. v1 is 0x20
+     * @throws DecryptError
      * @returns {Uint8Array} Plaintext
      */
     passDecrypt(ciphertext, password, file_format = 0x20) {
@@ -118,11 +119,12 @@ export class Crypto {
     }
 
     getError(wasmError) {
-        let tokens = wasmError.split(";", 1);
-        if (tokens.length != 2) {
+        let sepIdx = wasmError.indexOf(";");
+        if (sepIdx < 1) {
             return new Error(wasmError.toString());
         } else {
-            let [name, msg] = tokens;
+            let name = wasmError.slice(0, sepIdx);
+            let msg = wasmError.slice(sepIdx+1, wasmError.length);
             msg = msg.trim();
             let ex = new Error(msg);
             ex.name = name;

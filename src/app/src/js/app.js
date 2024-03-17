@@ -1,10 +1,11 @@
-import { useState, useEffect, useReducer, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useReducer, useRef } from "react";
 import { toUtf8Bytes } from "kestrel-crypto/utils";
 
 const ANIMATION_DURATION = 200;
 
 const workerMsgActions = {
-    passEncrypt: "pass_encrypt"
+    passEncrypt: "pass_encrypt",
+    passDecrypt: "pass_decrypt"
 }
 
 const appNavStates = {
@@ -36,7 +37,9 @@ const initialState = {
     workerReload: false,
     hasError: null,
     passEncryptResult: null,
-    passEncryptLoading: false
+    passEncryptLoading: false,
+    passDecryptResult: null,
+    passDecryptLoading: false
 }
 
 function DotLoader({ classes }) {
@@ -76,16 +79,13 @@ function LoadingNavBar() {
     );
 }
 
-function SelectPage({ makePageSelection }) {
+function SelectPage({ makePageSelection, title }) {
     return (
         <>
+        <h4 className="pb-3">{ title }</h4>
         <div>
             <button onClick={() => makePageSelection(true)}>Use Key</button>
             <button className="ml-4" onClick={() => makePageSelection(false)}>Use Password</button>
-        </div>
-        <div className="mt-5">
-            <p>Encrypt and decrypt files.</p>
-            <p>All actions happen offline in the browser.</p>
         </div>
         </>
     );
@@ -107,7 +107,10 @@ function KeyDecryptPage() {
     );
 }
 
-function PassDecryptPage() {
+function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoading, reloadWorker }) {
+    const [anim, setAnim] = useState({ start: false, met: false });
+    const [resultShown, setResultShown] = useState(false);
+
     const fileInputField = useRef(null);
     const [hasError, setHasError] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
@@ -116,10 +119,28 @@ function PassDecryptPage() {
     const [ciphertextFile, setCiphertextFile] = useState(null);
     const [password, setPassword] = useState("");
 
-    const decryptDisabled = hasError;
-    const overhead = (512 * 1024) + 36;
+    const showSpinner = passDecryptLoading || (anim.start && !anim.met);
+    const decryptDisabled = hasError || showSpinner || resultShown;
+
     // 1GiB + file format overhead (32 bytes per 64k + 36 byte header)
-    const maxFileSize = (1024 * (1024 * 1024)) + overhead;
+    const s100MiB = 100 * (1024 * 1024);
+    const s1GiB = 1024 * (1024 * 1024);
+    const overhead = (512 * 1024) + 36;
+    const maxFileSize = s1GiB + overhead;
+
+    useEffect(() => {
+        if (passDecryptResult && passDecryptResult.exception && !resultShown) {
+            let ex = passDecryptResult.exception;
+            setHasError(true);
+            if (ex.name == "DecryptError::ChaPolyDecrypt") {
+                setErrorMsg("Decrypt Failed. Check password used.");
+            } else {
+                setErrorMsg(ex.message);
+            }
+        } else if (passDecryptResult && !passDecryptResult.exception) {
+            setResultShown(true);
+        }
+    }, [passDecryptResult]);
 
     function fileChange(event) {
         const file = event.target.files[0];
@@ -144,9 +165,36 @@ function PassDecryptPage() {
         if (fileSize > maxFileSize) {
             setHasError(true);
             setErrorMsg("File is too large. Maximum 1GB");
+            return;
         }
 
-        console.log(ciphertextFile.size);
+        setAnim({ start: true, met: false });
+        setTimeout(() => {
+            setAnim({ start: false, met: true });
+        }, ANIMATION_DURATION);
+
+        sendMessage(workerMsgActions.passDecrypt, [ciphertextFile, toUtf8Bytes(password)]);
+    }
+
+    function doneClick() {
+        if (passDecryptResult && passDecryptResult.url) {
+            URL.revokeObjectURL(passDecryptResult.url);
+        }
+        setAnim({ start: false, met: false });
+        setResultShown(false);
+        setCiphertextFile(null);
+        if (fileInputField) {
+            fileInputField.current.value = "";
+        }
+        setPassword("");
+        setHasError(false);
+        setErrorMsg("");
+        if (fileSize > 1) {
+            // TODO: Rerender isn't happening here so it looks
+            // like the screen has old date.
+            reloadWorker();
+        }
+        setFileSize(0);
     }
 
     return (
@@ -170,6 +218,30 @@ function PassDecryptPage() {
                 <div>
                     <button onClick={decryptClick} disabled={decryptDisabled}>Decrypt</button>
                 </div>
+                { showSpinner ? (
+                        <div className="pt-2">
+                            <DotLoader classes={"ml-1 mt-1"} />
+                        </div>
+                    ) : (
+                        <>
+                        { resultShown ? (
+                            <>
+                            <div className="pt-2">
+                                <a href={passDecryptResult.url} style={{display: "inline-block"}} download={passDecryptResult.filename}>
+                                    <img src="./assets/img/download.svg" alt="Download" style={{display: "inline-block", verticalAlign: "middle"}}></img>{passDecryptResult.filename}
+                                </a>
+                            </div>
+                            <div>
+                                <button onClick={doneClick}>Done</button>
+                            </div>
+                            </>
+                            ) : (
+                                <></>
+                            )
+                        }
+                        </>
+                    )
+                }
             </div>
         </div>
     );
@@ -184,8 +256,7 @@ function KeyEncryptPage() {
 }
 
 function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, reloadWorker }) {
-    const [peAnimStart, setPeAnimStart] = useState(false);
-    const [peAnimMet, setPeAnimMet] = useState(false);
+    const [anim, setAnim] = useState({ start: false, met: false });
     const [resultShown, setResultShown] = useState(false);
 
     const [plaintextFile, setPlaintextFile] = useState(null);
@@ -196,9 +267,11 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
     const [validationError, setValidationError] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
 
-    const peShowSpinner = passEncryptLoading || (peAnimStart && !peAnimMet);
-    const encryptDisabled = validationError || peShowSpinner || resultShown;
-    const maxFileSize = 1024 * (1024 * 1024); // 1GiB
+    const showSpinner = passEncryptLoading || (anim.start && !anim.met);
+    const encryptDisabled = validationError || showSpinner || resultShown;
+    const s100MiB = 100 * (1024 * 1024);
+    const s1GiB = 1024 * (1024 * 1024);
+    const maxFileSize = s1GiB;
 
     function fileChange(event) {
         const file = event.target.files[0];
@@ -234,12 +307,10 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
             setErrorMsg("Passwords do not match");
             return;
         }
-        setPeAnimStart(true);
-        setPeAnimMet(false);
+        setAnim({ start: true, met: false });
         setResultShown(true);
         setTimeout(() => {
-            setPeAnimStart(false);
-            setPeAnimMet(true);
+            setAnim({ start: false, met: true });
         }, ANIMATION_DURATION);
         sendMessage(workerMsgActions.passEncrypt, [plaintextFile, toUtf8Bytes(password)]);
     }
@@ -248,11 +319,9 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
         if (passEncryptResult) {
             URL.revokeObjectURL(passEncryptResult.url);
         }
-        setPeAnimStart(false);
-        setPeAnimMet(false);
+        setAnim({ start: false, met: false });
         setResultShown(false);
         setPlaintextFile(null);
-        setFileSize(0);
         if (fileInputField) {
             fileInputField.current.value = "";
         }
@@ -260,10 +329,10 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
         setConfirmPassword("");
         setValidationError(false);
         setErrorMsg("");
-        if (fileSize > (100 * (1024 * 1024))) {
-            console.log("reloading worker");
+        if (fileSize > s100MiB) {
             reloadWorker();
         }
+        setFileSize(0);
     }
 
     return (
@@ -291,8 +360,8 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
                 <div>
                     <button onClick={encryptClick} disabled={encryptDisabled}>Encrypt</button>
                 </div>
-                { peShowSpinner ? (
-                        <div>
+                { showSpinner ? (
+                        <div className="pt-2">
                             <DotLoader classes={"ml-1 mt-1"} />
                         </div>
                     ) : (
@@ -309,7 +378,7 @@ function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, r
                             </div>
                             </>
                             ) : (
-                                <div></div>
+                                <></>
                             )
                         }
                         </>
@@ -328,11 +397,24 @@ function reducer(state, action) {
             passEncryptResult: null,
             passEncryptLoading: true
         };
+    } else if (action.action == "send" && action.msg.action == workerMsgActions.passDecrypt) {
+        return {
+            ...state,
+            hasError: null,
+            passDecryptResult: null,
+            passDecryptLoading: true
+        };
     } else if (action.action == "recv" && action.msg.action == workerMsgActions.passEncrypt) {
         return {
             ...state,
-            passEncryptLoading: false,
-            passEncryptResult: action.msg.result
+            passEncryptResult: action.msg.result,
+            passEncryptLoading: false
+        };
+    } else if (action.action == "recv" && action.msg.action == workerMsgActions.passDecrypt) {
+        return {
+            ...state,
+            passDecryptResult: action.msg.result,
+            passDecryptLoading: false
         };
     } else if (action.action == "recv" && action.msg.action == "init") {
         return {
@@ -426,7 +508,7 @@ export default function App() {
         reloadWorker();
     }, []);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const worker = new Worker("worker.bundle.js", { type: "module" });
         worker.onmessage = e => {
             let msg = e.data;
@@ -528,17 +610,22 @@ export default function App() {
                     reloadWorker={reloadWorker} />
             );
         } else {
-            selectedPage = (<SelectPage makePageSelection={makeEncryptPageSelection} />);
+            selectedPage = (<SelectPage makePageSelection={makeEncryptPageSelection} title="Encrypt File" />);
         }
     } else if (state.appNavState == appNavStates.decrypt) {
         if (state.decryptNavState == decryptNavStates.key) {
             selectedPage = (<KeyDecryptPage />);
         } else if (state.decryptNavState == decryptNavStates.pass) {
             selectedPage = (
-                <PassDecryptPage />
+                <PassDecryptPage
+                    sendMessage={sendMessage}
+                    passDecryptResult={state.passDecryptResult}
+                    passDecryptLoading={state.passDecryptLoading}
+                    reloadWorker={reloadWorker}
+                />
             );
         } else {
-            selectedPage = (<SelectPage makePageSelection={makeDecryptPageSelection} />);
+            selectedPage = (<SelectPage makePageSelection={makeDecryptPageSelection} title="Decrypt File" />);
         }
     } else if (state.appNavState == appNavStates.contacts) {
         selectedPage = (<ContactsPage />);
@@ -551,7 +638,10 @@ export default function App() {
             decryptClick={navDecryptClick}
             contactsClick={navContactsClick}
             active={state.appNavState} />
-        {selectedPage}
+        <div className="content">
+            {selectedPage}
+        </div>
+        <div className="footer">Kestrel v0.1.0</div>
         </>
     );
 }
