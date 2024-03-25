@@ -21,10 +21,16 @@ export const decryptNavStates = {
     pass: 2
 }
 
+export const contactsNavStates = {
+    start: 0,
+    genKey: 1
+}
+
 export const initialState = {
     appNavState: appNavStates.encrypt,
     encryptNavState: encryptNavStates.start,
     decryptNavState: decryptNavStates.start,
+    contactsNavState: contactsNavStates.start,
     worker: null,
     workerAnimStart: false,
     workerAnimMet: false,
@@ -117,7 +123,8 @@ export function reducer(state, action) {
     } else if (action.action == "nav_contacts_clicked") {
         return {
             ...state,
-            appNavState: appNavStates.contacts
+            appNavState: appNavStates.contacts,
+            contactsNavState: contactsNavStates.start
         };
     } else if (action.action == "nav_encrypt_select_key") {
         return {
@@ -138,6 +145,11 @@ export function reducer(state, action) {
         return {
             ...state,
             decryptNavState: decryptNavStates.pass
+        };
+    } else if (action.action == "nav_contacts_genkey") {
+        return {
+            ...state,
+            contactsNavState: contactsNavStates.genKey
         };
     } else {
         return {

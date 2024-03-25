@@ -1,10 +1,13 @@
 import { useEffect, useReducer } from "react";
 
-import { reducer, initialState, appNavStates, encryptNavStates, decryptNavStates } from "./state.js";
+import {
+    reducer, initialState, appNavStates,
+    encryptNavStates, decryptNavStates, contactsNavStates
+} from "./state.js";
 import { ANIMATION_DURATION, DotLoader } from "./components.js";
 import { PassEncryptPage, KeyEncryptPage } from "./encrypt.js";
 import { PassDecryptPage, KeyDecryptPage } from "./decrypt.js";
-import { ContactsPage } from "./contacts.js";
+import { ContactsPage, GenKeyPage } from "./contacts.js";
 
 function NavBar({ encryptClick, decryptClick, contactsClick, active }) {
     return (
@@ -100,6 +103,10 @@ export default function App() {
         dispatch({ action: "nav_contacts_clicked" });
     }
 
+    function navGenKeyClick() {
+        dispatch({ action: "nav_contacts_genkey" });
+    }
+
     function makeEncryptPageSelection(useKey) {
         if (useKey) {
             dispatch({ action: "nav_encrypt_select_key" });
@@ -170,7 +177,11 @@ export default function App() {
             selectedPage = (<SelectPage makePageSelection={makeDecryptPageSelection} title="Decrypt File" />);
         }
     } else if (state.appNavState == appNavStates.contacts) {
-        selectedPage = (<ContactsPage />);
+        if (state.contactsNavState == contactsNavStates.genKey) {
+            selectedPage = (<GenKeyPage navContactsClick={navContactsClick} />);
+        } else {
+            selectedPage = (<ContactsPage navGenKeyClick={navGenKeyClick} />);
+        }
     }
 
     return (

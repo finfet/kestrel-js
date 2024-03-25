@@ -1,3 +1,186 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+* {
+    margin: 0;
+}
+
+html, body {
+    height: 100%;
+    font-size: 16px;
+    font-family: "Helvetica", "Arial", sans-serif;
+}
+
+body {
+    line-height: 1.5;
+    background-color: #fff;
+}
+
+img, picture, video, canvas, svg {
+    display: block;
+    max-width: 100%;
+}
+
+input, button, textarea, select {
+    font: inherit;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+    overflow-wrap: break-word;
+}
+
+.container {
+    height: 100%;
+    max-width: 968px;
+    padding: 1em;
+    margin: auto;
+    background-color: #fff;
+}
+
+@keyframes dot-load1 {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+@keyframes dot-load2 {
+    from {
+        transform: translate(0, 0);
+    }
+
+    to {
+        transform: translate(24px, 0);
+    }
+}
+
+@keyframes dot-load3 {
+    from {
+        transform: scale(1);
+    }
+
+    to {
+        transform: scale(0);
+    }
+}
+
+.dot-loader {
+    display: inline-block;
+    position: relative;
+    width: 75px;
+}
+
+.dot-loader div {
+    position: absolute;
+    top: -12px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #990000;
+    animation-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+
+.dot-loader div:nth-child(1) {
+    left: 8px;
+    animation: dot-load1 0.6s infinite;
+}
+
+.dot-loader div:nth-child(2) {
+    left: 8px;
+    animation: dot-load2 0.6s infinite;
+}
+
+.dot-loader div:nth-child(3) {
+    left: 32px;
+    animation: dot-load2 0.6s infinite;
+}
+
+.dot-loader div:nth-child(4) {
+    left: 56px;
+    animation: dot-load3 0.6s infinite;
+}
+
+.error {
+    border-left: 4px solid #900000;
+    padding-left: 4px;
+    padding-top: 4px;
+}
+
+.hidden {
+    visibility: hidden;
+}
+
+.ml-1 {
+    margin-left: 0.25rem;
+}
+
+.ml-2 {
+    margin-left: 0.5rem;
+}
+
+.ml-3 {
+    margin-left: 1rem;
+}
+
+.ml-4 {
+    margin-left: 1.5rem;
+}
+
+.mt-1 {
+    margin-top: 0.25rem;
+}
+
+.mt-2 {
+    margin-top: 0.5rem;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+}
+
+.mt-4 {
+    margin-top: 2rem;
+}
+
+.mt-5 {
+    margin-top: 3rem;
+}
+
+.pt-1 {
+    padding-top: 0.25rem;
+}
+
+.pt-2 {
+    padding-top: 0.5rem;
+}
+
+.pt-3 {
+    padding-top: 1rem;
+}
+
+.pt-4 {
+    padding-top: 2rem;
+}
+
+.pb-1 {
+    padding-bottom: 0.25rem;
+}
+
+.pb-2 {
+    padding-bottom: 0.5rem;
+}
+
+.pb-3 {
+    padding-bottom: 1rem;
+}
+
+.pb-4 {
+    padding-bottom: 2rem;
+}
+
 #app {
     display: flex;
     height: 100%;
@@ -148,6 +331,15 @@ a.nav-link:visited {
     text-decoration: none;
 }
 
+a {
+    color: blue;
+}
+
+a:visited {
+    color: blue;
+    text-decoration: underline;
+}
+
 .form-group {
     display: flex;
     flex-direction: column;
@@ -168,25 +360,26 @@ a.nav-link:visited {
     flex: 0 1 auto;
 }
 
-.icon-button {
-    min-width: 40px;
-    min-height: 32px;
+.icon {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    background-repeat: no-repeat;
+    vertical-align: text-bottom;
 }
 
-.icon-reset:enabled {
-    background-image: url("../img/reset.svg");
-    background-repeat: no-repeat;
-    background-origin: content-box;
+button:enabled .icon.icon-back {
+    background-image: url("../img/left.svg");
 }
 
-.icon-reset:disabled {
-    background-image: url("../img/reset.svg");
-    background-repeat: no-repeat;
-    background-origin: content-box;
+button:disabled .icon.icon-back {
+    background-image: url("../img/left.svg");
 }
 
-.icon-reset:hover:enabled {
-    background-image: url("../img/reset-white.svg");
-    background-repeat: no-repeat;
-    background-origin: content-box;
+button:hover:enabled .icon.icon-back {
+    background-image: url("../img/left-white.svg");
+}
+
+.icon.icon-download {
+    background-image: url("../img/download.svg");
 }

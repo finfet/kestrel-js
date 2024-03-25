@@ -118,8 +118,9 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
                         { resultShown ? (
                             <>
                             <div className="pt-2">
-                                <a href={passEncryptResult.url} style={{display: "inline-block"}} download={passEncryptResult.filename}>
-                                    <img src="./assets/img/download.svg" alt="Download" style={{display: "inline-block", verticalAlign: "middle"}}></img>{passEncryptResult.filename}
+                                <a href={passEncryptResult.url} download={passEncryptResult.filename}>
+                                    <span className="icon icon-download"></span>
+                                    <span>{passEncryptResult.filename}</span>
                                 </a>
                             </div>
                             <div>
