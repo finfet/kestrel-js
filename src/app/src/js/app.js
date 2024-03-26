@@ -7,7 +7,10 @@ import {
 import { ANIMATION_DURATION, DotLoader } from "./components.js";
 import { PassEncryptPage, KeyEncryptPage } from "./encrypt.js";
 import { PassDecryptPage, KeyDecryptPage } from "./decrypt.js";
-import { ContactsPage, GenKeyPage } from "./contacts.js";
+import {
+    ContactsPage, GenKeyPage, AddKeyPage,
+    ExtractPage, ChangePassPage
+} from "./contacts.js";
 
 function NavBar({ encryptClick, decryptClick, contactsClick, active }) {
     return (
@@ -34,13 +37,17 @@ function LoadingNavBar() {
 
 function SelectPage({ makePageSelection, title }) {
     return (
-        <>
-        <h4 className="pb-3">{ title }</h4>
         <div>
-            <button onClick={() => makePageSelection(true)}>Use Key</button>
-            <button className="ml-4" onClick={() => makePageSelection(false)}>Use Password</button>
+            <h4>{ title }</h4>
+            <div className="pt-3 row-container">
+                <div>
+                    <button onClick={() => makePageSelection(true)}>Use Key</button>
+                </div>
+                <div>
+                    <button onClick={() => makePageSelection(false)}>Use Password</button>
+                </div>
+            </div>
         </div>
-        </>
     );
 }
 
@@ -105,6 +112,18 @@ export default function App() {
 
     function navGenKeyClick() {
         dispatch({ action: "nav_contacts_genkey" });
+    }
+
+    function navAddKeyClick() {
+        dispatch({ action: "nav_contacts_addkey" });
+    }
+
+    function navExtractClick() {
+        dispatch({ action: "nav_contacts_extract" });
+    }
+
+    function navChangePassClick() {
+        dispatch({ action: "nav_contacts_changepass" });
     }
 
     function makeEncryptPageSelection(useKey) {
@@ -178,9 +197,21 @@ export default function App() {
         }
     } else if (state.appNavState == appNavStates.contacts) {
         if (state.contactsNavState == contactsNavStates.genKey) {
-            selectedPage = (<GenKeyPage navContactsClick={navContactsClick} />);
+            selectedPage = (<GenKeyPage />);
+        } else if (state.contactsNavState == contactsNavStates.addKey) {
+            selectedPage = (<AddKeyPage />);
+        } else if (state.contactsNavState == contactsNavStates.extract) {
+            selectedPage = (<ExtractPage />);
+        } else if (state.contactsNavState == contactsNavStates.changePass) {
+            selectedPage = (<ChangePassPage />);
         } else {
-            selectedPage = (<ContactsPage navGenKeyClick={navGenKeyClick} />);
+            selectedPage = (
+                <ContactsPage
+                    navGenKeyClick={navGenKeyClick}
+                    navAddKeyClick={navAddKeyClick}
+                    navExtractClick={navExtractClick}
+                    navChangePassClick={navChangePassClick} />
+            );
         }
     }
 

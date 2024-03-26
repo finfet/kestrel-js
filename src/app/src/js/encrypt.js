@@ -39,8 +39,7 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
         setConfirmPassword(event.target.value);
     }
 
-    function encryptClick(event) {
-        event.preventDefault();
+    function encryptClick() {
         if (!plaintextFile) {
             setValidationError(true);
             setErrorMsg("Please select a file");

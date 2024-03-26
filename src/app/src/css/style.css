@@ -165,6 +165,10 @@ p, h1, h2, h3, h4, h5, h6 {
     padding-top: 2rem;
 }
 
+.pt-5 {
+    padding-top: 4rem;
+}
+
 .pb-1 {
     padding-bottom: 0.25rem;
 }
@@ -179,6 +183,14 @@ p, h1, h2, h3, h4, h5, h6 {
 
 .pb-4 {
     padding-bottom: 2rem;
+}
+
+.text-bold {
+    font-weight: bold;
+}
+
+.text-underline {
+    text-decoration: underline;
 }
 
 #app {
@@ -226,9 +238,11 @@ button:hover:enabled {
 
 button.link-button {
     padding: 0px;
-    width: fit-content;
-    height: fit-content;
+    min-width: fit-content;
+    min-height: fit-content;
     border: 0px solid transparent;
+    color: #000;
+    text-decoration: underline;
     box-shadow: 0px 0px transparent;
 }
 
@@ -242,7 +256,6 @@ button.link-button:hover:enabled {
     color: #000;
     text-decoration: underline;
     text-decoration-color: #900000;
-    text-decoration-thickness: 2px;
 }
 
 input {
@@ -353,7 +366,7 @@ a:visited {
 .row-container {
     display: flex;
     flex-direction: row;
-    gap: 32px;
+    gap: 24px;
 }
 
 .row-container > div {
@@ -382,4 +395,48 @@ button:hover:enabled .icon.icon-back {
 
 .icon.icon-download {
     background-image: url("../img/download.svg");
+}
+
+.contact-actions {
+    max-width: 640px;
+    margin-top: 1.5rem;
+}
+
+.contact-actions.row-container {
+    gap: 8px;
+}
+
+.contact {
+    border: 2px dashed #808080;
+    max-width: 640px;
+    overflow-x: scroll;
+    padding: 0.75rem;
+}
+
+.contact ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.contact ul li {
+    padding-top: 0.5rem;
+}
+
+@media screen and (max-width: 768px) {
+    .row-container {
+        flex-direction: column;
+    }
+
+    .contact {
+        max-width: 100%;
+    }
+
+    .contact-actions {
+        max-width: 100%;
+    }
+
+    .contact-actions.row-container {
+        flex-direction: row;
+    }
 }

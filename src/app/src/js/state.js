@@ -23,7 +23,10 @@ export const decryptNavStates = {
 
 export const contactsNavStates = {
     start: 0,
-    genKey: 1
+    genKey: 1,
+    addKey: 2,
+    extract: 3,
+    changePass: 4
 }
 
 export const initialState = {
@@ -150,6 +153,21 @@ export function reducer(state, action) {
         return {
             ...state,
             contactsNavState: contactsNavStates.genKey
+        };
+    } else if (action.action == "nav_contacts_addkey") {
+        return {
+            ...state,
+            contactsNavState: contactsNavStates.addKey
+        };
+    } else if (action.action == "nav_contacts_extract") {
+        return {
+            ...state,
+            contactsNavState: contactsNavStates.extract
+        };
+    } else if (action.action == "nav_contacts_changepass") {
+        return {
+            ...state,
+            contactsNavState: contactsNavStates.changePass
         };
     } else {
         return {

@@ -53,8 +53,7 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
         setPassword(event.target.value);
     }
 
-    function decryptClick(event) {
-        event.preventDefault();
+    function decryptClick() {
         if (!ciphertextFile) {
             setHasError(true);
             setErrorMsg("Please select a file");
