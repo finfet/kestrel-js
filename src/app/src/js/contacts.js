@@ -8,8 +8,10 @@ export function GenKeyPage() {
     );
 }
 
-export function AddKeyPage() {
+export function AddKeyPage({ contacts, addContact }) {
     const [name, setName] = useState("");
+    const [publicKey, setPublicKey] = useState("");
+    const [privateKey, setPrivateKey] = useState("");
     const [hasError, setHasError] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
 
@@ -20,14 +22,38 @@ export function AddKeyPage() {
         setName(event.target.value);
     }
 
-    function addClick(event) {
+    function publicKeyChange(event) {
+        setHasError(false);
+        setPublicKey(event.target.value);
+    }
+
+    function privateKeyChange(event) {
+        setHasError(false);
+        setPrivateKey(event.target.value);
+    }
+
+    function addClick() {
         if (name.length < 1) {
             setHasError(true);
             setErrorMsg("Please enter a name");
             return;
         }
 
-        console.log("Adding key:", name);
+        // TODO: Strip any blanks or newlines in the public/private key input
+
+        for (let i = 0; i < contacts.length; i++) {
+            if (name == contacts[i].name) {
+                setHasError(true);
+                setErrorMsg("Contact name already exists");
+                return;
+            }
+        }
+
+        addContact({
+            name: name,
+            publicKey: publicKey,
+            privateKey: privateKey
+        });
     }
 
     return (
@@ -36,6 +62,14 @@ export function AddKeyPage() {
             <div className="form-group pt-3">
                 <label htmlFor="name">Name</label>
                 <input type="text" id="name" name="name" value={name} onChange={nameChange} />
+            </div>
+            <div className="form-group pt-3">
+                <label htmlFor="public-key">Public Key</label>
+                <textarea id="public-key" name="public-key" rows="3" value={publicKey} onChange={publicKeyChange} />
+            </div>
+            <div className="form-group pt-3">
+                <label htmlFor="private-key">Private Key</label>
+                <textarea id="private-key" name="private-key" rows="3" value={privateKey} onChange={privateKeyChange} />
             </div>
             { (hasError == true) ? (
                     <div className="mt-3 error">Error: {errorMsg}</div>
@@ -68,19 +102,25 @@ export function ChangePassPage() {
 
 function ContactList({ contacts }) {
     const contactItems = contacts.map(contact =>
-        <div>
+        <div key={contact.publicKey}>
             <div className="contact-actions row-container">
-                <div style={{margin: "auto"}}></div>
-                <div><button className="link-button">Edit</button></div>
                 <div><button className="link-button">Delete</button></div>
+                <div><button className="link-button">Edit</button></div>
             </div>
-            <div className="contact" key={contact.publicKey}>
+            <div className="contact-card">
                 <ul>
                     <li className="text-bold">{contact.name}</li>
                     <li>Public Key</li>
-                    <li><pre>{contact.publicKey}</pre></li>
-                    <li>Private Key</li>
-                    <li><pre>{contact.privateKey}</pre></li>
+                    <li><span className="text-mono">{contact.publicKey}</span></li>
+                    { !!contact.privateKey ? (
+                            <>
+                            <li>Private Key</li>
+                            <li><span className="text-mono">{contact.privateKey}</span></li>
+                            </>
+                        ) : (
+                            <></>
+                        )
+                    }
                 </ul>
             </div>
         </div>
@@ -92,22 +132,10 @@ function ContactList({ contacts }) {
     );
 }
 
-export function ContactsPage({ navGenKeyClick, navAddKeyClick, navExtractClick, navChangePassClick }) {
-    const contacts = [
-        {
-            id: 0,
-            name: "Alice",
-            publicKey: "D7ZZstGYF6okKKEV2rwoUza/tK3iUa8IMY+l5tuirmzzkEog",
-            privateKey: "ZWdrMPEp09tKN3rAutCDQTshrNqoh0MLPnEERRCm5KFxvXcTo+s/Sf2ze0fKebVsQilImvLzfIHRcJuX8kGetyAQL1VchvzHR28vFhdKeq+NY2KT"
-        },
-        {
-            id: 1,
-            name: "Bobby Bobertson",
-            publicKey: "CT/e0R9tbBjTYUhDNnNxltT3LLWZLHwW4DCY/WHxBA8am9vP",
-            privateKey: ""
-        }
-    ]
-
+export function ContactsPage({
+    navGenKeyClick, navAddKeyClick, navExtractClick,
+    navChangePassClick, contacts
+}) {
     return (
         <div>
             <h4>Contacts</h4>

@@ -34,6 +34,18 @@ export const initialState = {
     encryptNavState: encryptNavStates.start,
     decryptNavState: decryptNavStates.start,
     contactsNavState: contactsNavStates.start,
+    contacts: [
+        {
+            name: "Alice",
+            publicKey: "D7ZZstGYF6okKKEV2rwoUza/tK3iUa8IMY+l5tuirmzzkEog",
+            privateKey: "ZWdrMPEp09tKN3rAutCDQTshrNqoh0MLPnEERRCm5KFxvXcTo+s/Sf2ze0fKebVsQilImvLzfIHRcJuX8kGetyAQL1VchvzHR28vFhdKeq+NY2KT"
+        },
+        {
+            name: "Bobby Bobertson",
+            publicKey: "CT/e0R9tbBjTYUhDNnNxltT3LLWZLHwW4DCY/WHxBA8am9vP",
+            privateKey: ""
+        }
+    ],
     worker: null,
     workerAnimStart: false,
     workerAnimMet: false,

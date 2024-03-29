@@ -14,7 +14,7 @@ import {
 
 function NavBar({ encryptClick, decryptClick, contactsClick, active }) {
     return (
-        <div className="mt-3 pb-3">
+        <div className="pb-3">
             <ul className="nav">
                 <li className="nav-title"><a className="nav-link" href="/">Kestrel</a></li>
                 <li onClick={encryptClick} className={"nav-button " + (active == appNavStates.encrypt ? "nav-button-active" : "")}>Encrypt</li>
@@ -126,6 +126,10 @@ export default function App() {
         dispatch({ action: "nav_contacts_changepass" });
     }
 
+    function addContact(contact) {
+        console.log("Adding contact: ", contact);
+    }
+
     function makeEncryptPageSelection(useKey) {
         if (useKey) {
             dispatch({ action: "nav_encrypt_select_key" });
@@ -199,7 +203,7 @@ export default function App() {
         if (state.contactsNavState == contactsNavStates.genKey) {
             selectedPage = (<GenKeyPage />);
         } else if (state.contactsNavState == contactsNavStates.addKey) {
-            selectedPage = (<AddKeyPage />);
+            selectedPage = (<AddKeyPage contacts={state.contacts} addContact={addContact} />);
         } else if (state.contactsNavState == contactsNavStates.extract) {
             selectedPage = (<ExtractPage />);
         } else if (state.contactsNavState == contactsNavStates.changePass) {
@@ -210,7 +214,8 @@ export default function App() {
                     navGenKeyClick={navGenKeyClick}
                     navAddKeyClick={navAddKeyClick}
                     navExtractClick={navExtractClick}
-                    navChangePassClick={navChangePassClick} />
+                    navChangePassClick={navChangePassClick}
+                    contacts={state.contacts} />
             );
         }
     }

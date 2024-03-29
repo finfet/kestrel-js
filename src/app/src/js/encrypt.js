@@ -139,6 +139,9 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
 }
 
 export function KeyEncryptPage() {
+    // TODO: Will need error handling for issues with the keyring. When the
+    // user goes to decrypt and their private key and public key don't match,
+    // throw an error.
     return (
         <div>
             <h4>Encrypt with Key</h4>
