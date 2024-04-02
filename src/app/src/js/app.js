@@ -85,6 +85,25 @@ export default function App() {
         }
     }, [state.workerReload]);
 
+    useEffect(() => {
+        const contacts = localStorage.getItem("contacts");
+        if (contacts == null) {
+            dispatch({ action: "set_contacts", contacts: []});
+        } else {
+            try {
+                const contacts = JSON.parse(localStorage.getItem("contacts"));
+                dispatch({ action: "set_contacts", contacts: contacts });
+            } finally {
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        if (state.contactAdded) {
+            localStorage.setItem("contacts", JSON.stringify(state.contacts));
+        }
+    }, [state.contacts, state.contactAdded]);
+
     function reloadWorker() {
         dispatch({ action: "reload_worker" });
     }
@@ -127,7 +146,7 @@ export default function App() {
     }
 
     function addContact(contact) {
-        console.log("Adding contact: ", contact);
+        dispatch({ action: "add_contact", contact: contact });
     }
 
     function makeEncryptPageSelection(useKey) {

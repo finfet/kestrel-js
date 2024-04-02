@@ -1,3 +1,4 @@
+import { base64 } from "./base64.js";
 
 export function toHex(bytes) {
     let hex = "";
@@ -35,4 +36,12 @@ export function secureRandom(len) {
     const randBytes = new Uint8Array(len);
     globalThis.crypto.getRandomValues(randBytes);
     return randBytes;
+}
+
+export function base64Encode(buffer) {
+    return base64.encode(buffer);
+}
+
+export function base64Decode(b64String) {
+    return base64.decode(b64String);
 }

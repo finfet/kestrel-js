@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { base64Decode } from "kestrel-crypto/utils";
 
 export function GenKeyPage() {
     return (
@@ -14,20 +15,26 @@ export function AddKeyPage({ contacts, addContact }) {
     const [privateKey, setPrivateKey] = useState("");
     const [hasError, setHasError] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
+    const [contactAdded, setContactAdded] = useState(false);
+    const [success, setSuccess] = useState(false);
+    const [successMsg, setSuccessMsg] = useState("");
 
-    const addDisabled = hasError;
+    const addDisabled = hasError || contactAdded;
 
     function nameChange(event) {
+        setContactAdded(false);
         setHasError(false);
         setName(event.target.value);
     }
 
     function publicKeyChange(event) {
+        setContactAdded(false);
         setHasError(false);
         setPublicKey(event.target.value);
     }
 
     function privateKeyChange(event) {
+        setContactAdded(false);
         setHasError(false);
         setPrivateKey(event.target.value);
     }
@@ -39,21 +46,95 @@ export function AddKeyPage({ contacts, addContact }) {
             return;
         }
 
-        // TODO: Strip any blanks or newlines in the public/private key input
+        const cleanedPubKey = publicKey.replaceAll("\n", "").replaceAll(" ", "");
+        const cleanedPrivKey = privateKey.replaceAll("\n", "").replaceAll(" ", "");
 
-        for (let i = 0; i < contacts.length; i++) {
-            if (name == contacts[i].name) {
-                setHasError(true);
-                setErrorMsg("Contact name already exists");
-                return;
-            }
+        if (nameExists(name, contacts)) {
+            setHasError(true);
+            setErrorMsg("Contact name already exists");
+            return;
         }
+
+        if (publicKeyExists(cleanedPubKey, contacts)) {
+            setHasError(true);
+            setErrorMsg("Public key already exists");
+            return;
+        }
+
+        if (!validPublicKey(cleanedPubKey)) {
+            setHasError(true);
+            setErrorMsg("Invalid public key");
+            return;
+        }
+
+        if (cleanedPrivKey.length > 0 && !validPrivateKey(cleanedPrivKey)) {
+            setHasError(true);
+            setErrorMsg("Invalid private key");
+            return;
+        }
+
+        setContactAdded(true);
+        setSuccessMsg("Contact added");
+        setSuccess(true);
 
         addContact({
             name: name,
-            publicKey: publicKey,
-            privateKey: privateKey
+            publicKey: cleanedPubKey,
+            privateKey: cleanedPrivKey
         });
+    }
+
+    function doneClick() {
+        setContactAdded(false);
+        setHasError(false);
+        setSuccess(false);
+        setPublicKey("");
+        setPrivateKey("");
+        setName("");
+    }
+
+    function nameExists(name, contacts) {
+        for (let i = 0; i < contacts.length; i++) {
+            if (name == contacts[i].name) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function publicKeyExists(pubKey, contacts) {
+        for (let i = 0; i < contacts.length; i++) {
+            if (pubKey == contacts[i].publicKey) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function validPublicKey(pubKey) {
+        try {
+            let bytes = base64Decode(pubKey);
+            if (bytes.length != 36) {
+                return false;
+            }
+        } catch (_) {
+            return false;
+        }
+        return true;
+    }
+
+    function validPrivateKey(privateKey) {
+        try {
+            let bytes = base64Decode(privateKey);
+            if (bytes.length != 84) {
+                return false;
+            }
+        } catch (_) {
+            return false;
+        }
+        return true;
     }
 
     return (
@@ -69,7 +150,7 @@ export function AddKeyPage({ contacts, addContact }) {
             </div>
             <div className="form-group pt-3">
                 <label htmlFor="private-key">Private Key</label>
-                <textarea id="private-key" name="private-key" rows="3" value={privateKey} onChange={privateKeyChange} />
+                <textarea id="private-key" name="private-key" rows="6" value={privateKey} onChange={privateKeyChange} />
             </div>
             { (hasError == true) ? (
                     <div className="mt-3 error">Error: {errorMsg}</div>
@@ -77,8 +158,25 @@ export function AddKeyPage({ contacts, addContact }) {
                     <div className="mt-3 error hidden">OK</div>
                 )
             }
-            <div className="pt-3">
-                <button onClick={addClick} disabled={addDisabled}>Add</button>
+            {
+                (success == true) ? (
+                    <div className="mt-3 success">{successMsg}</div>
+                ) : (
+                    <></>
+                )
+            }
+            <div className="row-container pt-3">
+                <div>
+                    <button onClick={addClick} disabled={addDisabled}>Add</button>
+                </div>
+                { (contactAdded == true) ? (
+                    <div>
+                        <button onClick={doneClick}>Done</button>
+                    </div>
+                ) : (
+                    <></>
+                )
+                }
             </div>
         </div>
     );
@@ -125,6 +223,11 @@ function ContactList({ contacts }) {
             </div>
         </div>
     );
+
+    if (contactItems.length < 1) {
+        return (<p className="pt-4">No contacts yet. Try generating a new key.</p>);
+    }
+
     return (
         <>
             {contactItems}
