@@ -9,7 +9,7 @@ import { PassEncryptPage, KeyEncryptPage } from "./encrypt.js";
 import { PassDecryptPage, KeyDecryptPage } from "./decrypt.js";
 import {
     ContactsPage, GenKeyPage, AddKeyPage,
-    ExtractPage, ChangePassPage
+    EditKeyPage, ExtractPage, ChangePassPage
 } from "./contacts.js";
 
 function NavBar({ encryptClick, decryptClick, contactsClick, active }) {
@@ -51,6 +51,18 @@ function SelectPage({ makePageSelection, title }) {
     );
 }
 
+function sortContacts(a, b) {
+    if (a.name < b.name) {
+        return -1;
+    }
+
+    if (a.name > b.name) {
+        return 1;
+    }
+
+    return 0;
+}
+
 export default function App() {
     const [state, dispatch] = useReducer(reducer, initialState);
 
@@ -88,21 +100,22 @@ export default function App() {
     useEffect(() => {
         const contacts = localStorage.getItem("contacts");
         if (contacts == null) {
-            dispatch({ action: "set_contacts", contacts: []});
+            dispatch({ action: "init_contacts", contacts: []});
         } else {
             try {
                 const contacts = JSON.parse(localStorage.getItem("contacts"));
-                dispatch({ action: "set_contacts", contacts: contacts });
-            } finally {
+                dispatch({ action: "init_contacts", contacts: contacts });
+            } catch (_e) {
+                dispatch({ action: "init_contacts", contacts: [] });
             }
         }
     }, []);
 
     useEffect(() => {
-        if (state.contactAdded) {
+        if (state.contactsInit) {
             localStorage.setItem("contacts", JSON.stringify(state.contacts));
         }
-    }, [state.contacts, state.contactAdded]);
+    }, [state.contacts, state.contactsInit]);
 
     function reloadWorker() {
         dispatch({ action: "reload_worker" });
@@ -137,6 +150,10 @@ export default function App() {
         dispatch({ action: "nav_contacts_addkey" });
     }
 
+    function navEditKeyClick(contact) {
+        dispatch({ action: "nav_contacts_editkey", contact: contact });
+    }
+
     function navExtractClick() {
         dispatch({ action: "nav_contacts_extract" });
     }
@@ -146,7 +163,22 @@ export default function App() {
     }
 
     function addContact(contact) {
-        dispatch({ action: "add_contact", contact: contact });
+        const contacts = [...state.contacts, contact];
+        contacts.sort(sortContacts);
+        dispatch({ action: "update_contacts", contacts: contacts });
+    }
+
+    function editContact(contact, oldName) {
+        console.log("Updating contact:", contact.name);
+        let contacts = [...state.contacts];
+        for (let i = 0; i < contacts.length; i++) {
+            if (contacts[i].name == oldName) {
+                contacts[i] = contact;
+                break;
+            }
+        }
+        contacts.sort(sortContacts);
+        dispatch({ action: "update_contacts", contacts: contacts });
     }
 
     function makeEncryptPageSelection(useKey) {
@@ -222,7 +254,9 @@ export default function App() {
         if (state.contactsNavState == contactsNavStates.genKey) {
             selectedPage = (<GenKeyPage />);
         } else if (state.contactsNavState == contactsNavStates.addKey) {
-            selectedPage = (<AddKeyPage contacts={state.contacts} addContact={addContact} />);
+            selectedPage = (<AddKeyPage contacts={state.contacts} addContact={addContact} backClick={navContactsClick} />);
+        } else if (state.contactsNavState == contactsNavStates.editKey) {
+            selectedPage = (<EditKeyPage contact={state.contactToEdit} editContact={editContact} backClick={navContactsClick} />);
         } else if (state.contactsNavState == contactsNavStates.extract) {
             selectedPage = (<ExtractPage />);
         } else if (state.contactsNavState == contactsNavStates.changePass) {
@@ -232,6 +266,7 @@ export default function App() {
                 <ContactsPage
                     navGenKeyClick={navGenKeyClick}
                     navAddKeyClick={navAddKeyClick}
+                    navEditKeyClick={navEditKeyClick}
                     navExtractClick={navExtractClick}
                     navChangePassClick={navChangePassClick}
                     contacts={state.contacts} />

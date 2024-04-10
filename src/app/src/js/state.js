@@ -25,8 +25,10 @@ export const contactsNavStates = {
     start: 0,
     genKey: 1,
     addKey: 2,
-    extract: 3,
-    changePass: 4
+    editKey: 3,
+    deleteKey: 4,
+    extract: 5,
+    changePass: 6
 }
 
 export const initialState = {
@@ -34,7 +36,9 @@ export const initialState = {
     encryptNavState: encryptNavStates.start,
     decryptNavState: decryptNavStates.start,
     contactsNavState: contactsNavStates.start,
-    contactAdded: false,
+    contactToDelete: null,
+    contactToEdit: null,
+    contactsInit: false,
     contacts: [],
     worker: null,
     workerAnimStart: false,
@@ -161,6 +165,18 @@ export function reducer(state, action) {
             ...state,
             contactsNavState: contactsNavStates.addKey
         };
+    } else if (action.action == "nav_contacts_editkey") {
+        return {
+            ...state,
+            contactToEdit: action.contact,
+            contactsNavState: contactsNavStates.editKey
+        };
+    } else if (action.action == "nav_contacts_deletekey") {
+        return {
+            ...state,
+            contactToDelete: action.contact,
+            contactsNavState: contactsNavStates.deleteKey
+        };
     } else if (action.action == "nav_contacts_extract") {
         return {
             ...state,
@@ -171,16 +187,16 @@ export function reducer(state, action) {
             ...state,
             contactsNavState: contactsNavStates.changePass
         };
-    } else if (action.action == "set_contacts") {
+    } else if (action.action == "init_contacts") {
+        return {
+            ...state,
+            contactsInit: true,
+            contacts: action.contacts
+        };
+    } else if (action.action == "update_contacts") {
         return {
             ...state,
             contacts: action.contacts
-        };
-    } else if (action.action == "add_contact") {
-        return {
-            ...state,
-            contactAdded: true,
-            contacts: [...state.contacts, action.contact]
         };
     } else {
         return {

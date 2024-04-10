@@ -1,6 +1,50 @@
 import { useState } from "react";
 import { base64Decode } from "kestrel-crypto/utils";
 
+function nameExists(name, contacts) {
+    for (let i = 0; i < contacts.length; i++) {
+        if (name == contacts[i].name) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function publicKeyExists(pubKey, contacts) {
+    for (let i = 0; i < contacts.length; i++) {
+        if (pubKey == contacts[i].publicKey) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function validPublicKey(pubKey) {
+    try {
+        let bytes = base64Decode(pubKey);
+        if (bytes.length != 36) {
+            return false;
+        }
+    } catch (_) {
+        return false;
+    }
+    return true;
+}
+
+function validPrivateKey(privateKey) {
+    try {
+        let bytes = base64Decode(privateKey);
+        if (bytes.length != 84) {
+            return false;
+        }
+    } catch (_) {
+        return false;
+    }
+    return true;
+}
+
 export function GenKeyPage() {
     return (
         <div>
@@ -9,7 +53,7 @@ export function GenKeyPage() {
     );
 }
 
-export function AddKeyPage({ contacts, addContact }) {
+export function AddKeyPage({ contacts, addContact, backClick }) {
     const [name, setName] = useState("");
     const [publicKey, setPublicKey] = useState("");
     const [privateKey, setPrivateKey] = useState("");
@@ -93,52 +137,11 @@ export function AddKeyPage({ contacts, addContact }) {
         setName("");
     }
 
-    function nameExists(name, contacts) {
-        for (let i = 0; i < contacts.length; i++) {
-            if (name == contacts[i].name) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    function publicKeyExists(pubKey, contacts) {
-        for (let i = 0; i < contacts.length; i++) {
-            if (pubKey == contacts[i].publicKey) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    function validPublicKey(pubKey) {
-        try {
-            let bytes = base64Decode(pubKey);
-            if (bytes.length != 36) {
-                return false;
-            }
-        } catch (_) {
-            return false;
-        }
-        return true;
-    }
-
-    function validPrivateKey(privateKey) {
-        try {
-            let bytes = base64Decode(privateKey);
-            if (bytes.length != 84) {
-                return false;
-            }
-        } catch (_) {
-            return false;
-        }
-        return true;
-    }
-
     return (
         <div>
+            <div className="row-container pb-3">
+                <button className="link-button" onClick={backClick}><span className="icon icon-back"></span>Back</button>
+            </div>
             <h4>Add Key</h4>
             <div className="form-group pt-3">
                 <label htmlFor="name">Name</label>
@@ -162,7 +165,7 @@ export function AddKeyPage({ contacts, addContact }) {
                 (success == true) ? (
                     <div className="mt-3 success">{successMsg}</div>
                 ) : (
-                    <></>
+                    <div className="mt-3 success hidden">OK</div>
                 )
             }
             <div className="row-container pt-3">
@@ -177,6 +180,23 @@ export function AddKeyPage({ contacts, addContact }) {
                     <></>
                 )
                 }
+            </div>
+        </div>
+    );
+}
+
+export function EditKeyPage({ contact, editContact, backClick }) {
+    return (
+        <div>
+            <div className="row-container pb-3">
+                <button className="link-button" onClick={backClick}><span className="icon icon-back"></span>Back</button>
+            </div>
+            <h4>Edit Key</h4>
+            <p>Name: {contact.name}</p>
+            <div className="row-container pt-3">
+                <div>
+                    <button onClick={() => editContact(contact, contact.name) }>Edit</button>
+                </div>
             </div>
         </div>
     );
@@ -198,12 +218,12 @@ export function ChangePassPage() {
     )
 }
 
-function ContactList({ contacts }) {
+function ContactList({ contacts, editKeyClick }) {
     const contactItems = contacts.map(contact =>
         <div key={contact.publicKey}>
             <div className="contact-actions row-container">
                 <div><button className="link-button">Delete</button></div>
-                <div><button className="link-button">Edit</button></div>
+                <div><button onClick={() => editKeyClick(contact)} className="link-button">Edit</button></div>
             </div>
             <div className="contact-card">
                 <ul>
@@ -236,8 +256,8 @@ function ContactList({ contacts }) {
 }
 
 export function ContactsPage({
-    navGenKeyClick, navAddKeyClick, navExtractClick,
-    navChangePassClick, contacts
+    navGenKeyClick, navAddKeyClick, navEditKeyClick,
+    navExtractClick, navChangePassClick, contacts
 }) {
     return (
         <div>
@@ -250,14 +270,14 @@ export function ContactsPage({
                     <button className="link-button" onClick={navGenKeyClick}>Generate Key</button>
                 </div>
                 <div>
-                    <button className="link-button" onClick={navExtractClick}>Extract Key</button>
+                    <button className="link-button" onClick={navExtractClick}>Extract Public Key</button>
                 </div>
                 <div>
                     <button className="link-button" onClick={navChangePassClick}>Change Password</button>
                 </div>
             </div>
             <div className="pt-2">
-                <ContactList contacts={contacts} />
+                <ContactList contacts={contacts} editKeyClick={navEditKeyClick} />
             </div>
         </div>
     );
