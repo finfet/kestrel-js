@@ -119,9 +119,11 @@ p, h1, h2, h3, h4, h5, h6 {
 
 button {
     border: 2px solid black;
-    padding: 2px 5px 2px 5px;
-    min-width: 75px;
-    min-height: 25px;
+    padding: 0px 5px 0px 5px;
+    height: 34px;
+    min-width: 68px;
+    text-align: center;
+    line-height: 34px;
     overflow: hidden;
     text-overflow: ellipsis;
     color: #000;
@@ -177,8 +179,6 @@ button.link-button:hover:enabled {
 input {
     border: 2px solid black;
     padding: 2px 5px 2px 5px;
-    background: #fff;
-    color: #000;
     max-width: 100%;
     width: 320px;
 }
@@ -186,6 +186,10 @@ input {
 input:focus {
     outline: 2px solid #900000;
     border: 2px solid #900000;
+}
+
+input:disabled {
+    border: 2px solid #808080;
 }
 
 input.file-input {
@@ -236,6 +240,10 @@ textarea {
 textarea:focus {
     outline: 2px solid #900000;
     border: 2px solid #900000;
+}
+
+textarea:disabled {
+    border: 2px solid #808080;
 }
 
 ul.nav {
@@ -313,21 +321,19 @@ a:visited {
     vertical-align: middle;
 }
 
-button:enabled .icon.icon-back {
-    margin-top: -2px;
-    margin-left: -4px;
-    background-image: url("../img/left.svg");
+button .icon {
+    margin-top: -1px;
 }
 
-button:disabled .icon.icon-back {
-    margin-top: -2px;
-    margin-left: -4px;
+button.link-button .icon {
+    margin-top: 0px;
+}
+
+.icon.icon-back {
     background-image: url("../img/left.svg");
 }
 
 button:hover:enabled .icon.icon-back {
-    margin-top: -2px;
-    margin-left: -4px;
     background-image: url("../img/left-white.svg");
 }
 
@@ -335,8 +341,20 @@ button.link-button:hover:enabled .icon.icon-back {
     background-image: url("../img/left.svg");
 }
 
+.icon.icon-delete {
+    background-image: url("../img/delete.svg");
+}
+
+button:hover:enabled .icon.icon-delete {
+    background-image: url("../img/delete-white.svg");
+}
+
 .icon.icon-download {
     background-image: url("../img/download.svg");
+}
+
+button:hover:enabled .icon.icon-download {
+    background-image: url("../img/download-white.svg");
 }
 
 .contact-actions {

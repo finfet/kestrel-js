@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { toUtf8Bytes } from "kestrel-crypto/utils";
 
 import { workerMsgActions } from "./state.js";
-import { DotLoader, ANIMATION_DURATION } from "./components.js";
+import { DotLoader, ANIMATION_DURATION } from "./common.js";
 
 export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoading, reloadWorker }) {
     const [anim, setAnim] = useState({ start: false, met: false });

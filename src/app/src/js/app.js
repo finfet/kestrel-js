@@ -4,12 +4,13 @@ import {
     reducer, initialState, appNavStates,
     encryptNavStates, decryptNavStates, contactsNavStates
 } from "./state.js";
-import { ANIMATION_DURATION, DotLoader } from "./components.js";
+import { ANIMATION_DURATION, DotLoader } from "./common.js";
 import { PassEncryptPage, KeyEncryptPage } from "./encrypt.js";
 import { PassDecryptPage, KeyDecryptPage } from "./decrypt.js";
 import {
     ContactsPage, GenKeyPage, AddKeyPage,
-    EditKeyPage, ExtractPage, ChangePassPage
+    EditKeyPage, DeleteKeyPage, ExtractPage,
+    ChangePassPage, ContactList
 } from "./contacts.js";
 
 function NavBar({ encryptClick, decryptClick, contactsClick, active }) {
@@ -154,6 +155,10 @@ export default function App() {
         dispatch({ action: "nav_contacts_editkey", contact: contact });
     }
 
+    function navDeleteKeyClick(contact) {
+        dispatch({ action: "nav_contacts_deletekey", contact: contact });
+    }
+
     function navExtractClick() {
         dispatch({ action: "nav_contacts_extract" });
     }
@@ -169,13 +174,28 @@ export default function App() {
     }
 
     function editContact(contact, oldName) {
-        console.log("Updating contact:", contact.name);
         let contacts = [...state.contacts];
         for (let i = 0; i < contacts.length; i++) {
             if (contacts[i].name == oldName) {
                 contacts[i] = contact;
                 break;
             }
+        }
+        contacts.sort(sortContacts);
+        dispatch({ action: "update_contacts", contacts: contacts });
+    }
+
+    function deleteContact(oldName) {
+        const contacts = [...state.contacts];
+        let idx = -1;
+        for (let i = 0; i < contacts.length; i++) {
+            if (contacts[i].name == oldName) {
+                idx = i;
+                break;
+            }
+        }
+        if (idx != -1) {
+            contacts.splice(idx, 1);
         }
         contacts.sort(sortContacts);
         dispatch({ action: "update_contacts", contacts: contacts });
@@ -256,7 +276,9 @@ export default function App() {
         } else if (state.contactsNavState == contactsNavStates.addKey) {
             selectedPage = (<AddKeyPage contacts={state.contacts} addContact={addContact} backClick={navContactsClick} />);
         } else if (state.contactsNavState == contactsNavStates.editKey) {
-            selectedPage = (<EditKeyPage contact={state.contactToEdit} editContact={editContact} backClick={navContactsClick} />);
+            selectedPage = (<EditKeyPage contacts={state.contacts} contact={state.contactToEdit} editContact={editContact} backClick={navContactsClick} />);
+        } else if (state.contactsNavState == contactsNavStates.deleteKey) {
+            selectedPage = (<DeleteKeyPage contact={state.contactToDelete} deleteContact={deleteContact} backClick={navContactsClick} />);
         } else if (state.contactsNavState == contactsNavStates.extract) {
             selectedPage = (<ExtractPage />);
         } else if (state.contactsNavState == contactsNavStates.changePass) {
@@ -266,10 +288,10 @@ export default function App() {
                 <ContactsPage
                     navGenKeyClick={navGenKeyClick}
                     navAddKeyClick={navAddKeyClick}
-                    navEditKeyClick={navEditKeyClick}
                     navExtractClick={navExtractClick}
-                    navChangePassClick={navChangePassClick}
-                    contacts={state.contacts} />
+                    navChangePassClick={navChangePassClick}>
+                        <ContactList contacts={state.contacts} editKeyClick={navEditKeyClick} deleteKeyClick={navDeleteKeyClick} />
+                </ContactsPage>
             );
         }
     }
