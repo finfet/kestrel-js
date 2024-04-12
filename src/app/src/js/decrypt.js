@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { toUtf8Bytes } from "kestrel-crypto/utils";
 
 import { workerMsgActions } from "./state.js";
-import { DotLoader, ANIMATION_DURATION } from "./common.js";
+import { ResultInfo, ErrorInfo, ANIMATION_DURATION } from "./common.js";
 
 export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoading, reloadWorker }) {
     const [anim, setAnim] = useState({ start: false, met: false });
@@ -10,7 +10,6 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
 
     const fileInputField = useRef(null);
     const [hasError, setHasError] = useState(false);
-    const [decryptError, setDecryptError] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
 
     const [fileSize, setFileSize] = useState(0);
@@ -19,6 +18,7 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
 
     const showSpinner = passDecryptLoading || (anim.start && !anim.met);
     const decryptDisabled = hasError || showSpinner || resultShown;
+    const showError = hasError;
 
     // 1GiB + file format overhead (32 bytes per 64k + 36 byte header)
     const s100MiB = 100 * (1024 * 1024);
@@ -29,7 +29,7 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
     useEffect(() => {
         if (passDecryptResult && passDecryptResult.exception) {
             let ex = passDecryptResult.exception;
-            setDecryptError(true);
+            setHasError(true);
             setResultShown(false);
             if (ex.name == "DecryptError::ChaPolyDecrypt") {
                 setErrorMsg("Decrypt Failed. Check password used.");
@@ -42,14 +42,12 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
     function fileChange(event) {
         const file = event.target.files[0];
         setHasError(false);
-        setDecryptError(false);
         setFileSize(file.size);
         setCiphertextFile(file);
     }
 
     function passwordChange(event) {
         setHasError(false);
-        setDecryptError(false);
         setPassword(event.target.value);
     }
 
@@ -68,7 +66,6 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
 
         setAnim({ start: true, met: false });
         setHasError(false);
-        setDecryptError(false);
         setResultShown(true);
         setTimeout(() => {
             setAnim({ start: false, met: true });
@@ -107,41 +104,16 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
                 <label htmlFor="password">Password</label>
                 <input type="password" id="password" name="password" value={password} onChange={passwordChange} />
             </div>
-            { (hasError || decryptError) ? (
-                    <div className="mt-3 error">Error: {errorMsg}</div>
-                ) : (
-                    <div className="mt-3 error hidden">OK</div>
-                )
-            }
+            <ErrorInfo showError={showError} errorMsg={errorMsg} />
             <div className="pt-3 row-container">
                 <div>
                     <button onClick={decryptClick} disabled={decryptDisabled}>Decrypt</button>
                 </div>
-                { showSpinner ? (
-                        <div className="pt-2">
-                            <DotLoader classes={"ml-1 mt-1"} />
-                        </div>
-                    ) : (
-                        <>
-                        { resultShown ? (
-                            <>
-                            <div className="pt-2">
-                                <a href={passDecryptResult.url} download={passDecryptResult.filename}>
-                                    <span className="icon icon-download"></span>
-                                    <span>{passDecryptResult.filename}</span>
-                                </a>
-                            </div>
-                            <div>
-                                <button onClick={doneClick}>Done</button>
-                            </div>
-                            </>
-                            ) : (
-                                <></>
-                            )
-                        }
-                        </>
-                    )
-                }
+                <ResultInfo
+                    showSpinner={showSpinner}
+                    resultShown={resultShown}
+                    result={passDecryptResult}
+                    doneClick={doneClick} />
             </div>
         </div>
     );

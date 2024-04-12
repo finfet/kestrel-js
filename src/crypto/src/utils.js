@@ -1,5 +1,3 @@
-import { base64 } from "./base64.js";
-
 export function toHex(bytes) {
     let hex = "";
     for (let byte of bytes) {
@@ -32,16 +30,12 @@ export function fromUtf8Bytes(bytes) {
     return decoder.decode(bytes);
 }
 
-export function secureRandom(len) {
-    const randBytes = new Uint8Array(len);
-    globalThis.crypto.getRandomValues(randBytes);
-    return randBytes;
-}
-
-export function base64Encode(buffer) {
-    return base64.encode(buffer);
+export function base64Encode(bytes) {
+    const binStr = String.fromCodePoint(...bytes);
+    return btoa(binStr);
 }
 
 export function base64Decode(b64String) {
-    return base64.decode(b64String);
+    const binStr = atob(b64String);
+    return Uint8Array.from(binStr, (m) => m.codePointAt(0));
 }

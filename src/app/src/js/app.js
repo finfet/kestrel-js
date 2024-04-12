@@ -272,7 +272,15 @@ export default function App() {
         }
     } else if (state.appNavState == appNavStates.contacts) {
         if (state.contactsNavState == contactsNavStates.genKey) {
-            selectedPage = (<GenKeyPage />);
+            selectedPage = (
+                <GenKeyPage
+                    sendMessage={sendMessage}
+                    generateKeyResult={state.generateKeyResult}
+                    generateKeyLoading={state.generateKeyLoading}
+                    addContact={addContact}
+                    backClick={navContactsClick}
+                />
+            );
         } else if (state.contactsNavState == contactsNavStates.addKey) {
             selectedPage = (<AddKeyPage contacts={state.contacts} addContact={addContact} backClick={navContactsClick} />);
         } else if (state.contactsNavState == contactsNavStates.editKey) {

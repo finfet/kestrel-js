@@ -1,6 +1,7 @@
 export const workerMsgActions = {
     passEncrypt: "pass_encrypt",
-    passDecrypt: "pass_decrypt"
+    passDecrypt: "pass_decrypt",
+    generateKey: "generate_key"
 }
 
 export const appNavStates = {
@@ -49,7 +50,9 @@ export const initialState = {
     passEncryptResult: null,
     passEncryptLoading: false,
     passDecryptResult: null,
-    passDecryptLoading: false
+    passDecryptLoading: false,
+    generateKeyResult: null,
+    generateKeyLoading: false
 }
 
 export function reducer(state, action) {
@@ -67,6 +70,13 @@ export function reducer(state, action) {
             passDecryptResult: null,
             passDecryptLoading: true
         };
+    } else if (action.action == "send" && action.msg.action == workerMsgActions.generateKey) {
+        return {
+            ...state,
+            hasError: null,
+            generateKeyResult: null,
+            generateKeyLoading: true
+        };
     } else if (action.action == "recv" && action.msg.action == workerMsgActions.passEncrypt) {
         return {
             ...state,
@@ -78,6 +88,12 @@ export function reducer(state, action) {
             ...state,
             passDecryptResult: action.msg.result,
             passDecryptLoading: false
+        };
+    } else if (action.action == "recv" && action.msg.action == workerMsgActions.generateKey) {
+        return {
+            ...state,
+            generateKeyResult: action.msg.result,
+            generateKeyLoading: false
         };
     } else if (action.action == "recv" && action.msg.action == "init") {
         return {

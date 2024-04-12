@@ -1,15 +1,23 @@
 import { Crypto } from "kestrel-crypto";
-import { secureRandom } from "kestrel-crypto/utils";
+
+const workerMsgActions = {
+    passEncrypt: "pass_encrypt",
+    passDecrypt: "pass_decrypt",
+    generateKey: "generate_key"
+}
 
 self.onmessage = (e) => {
     const msg = e.data;
     try {
         switch (msg.action) {
-            case "pass_encrypt":
-                passEncrypt(msg);
+            case workerMsgActions.passEncrypt:
+                passEncrypt(msg.args[0], msg.args[1]);
                 break;
-            case "pass_decrypt":
-                passDecrypt(msg);
+            case workerMsgActions.passDecrypt:
+                passDecrypt(msg.args[0], msg.args[1]);
+                break;
+            case workerMsgActions.generateKey:
+                generateKey(msg.args[0]);
                 break;
             default:
                 self.postMessage({ action: "exception", result: { type: "unknown_action", msg: "Cannot take unknown action" }})
@@ -20,12 +28,10 @@ self.onmessage = (e) => {
     }
 }
 
-async function passEncrypt(msg) {
+async function passEncrypt(inputFile, password) {
     const crypto = await Crypto.createInstance();
-    const inputFile = msg.args[0];
     const filename = `${inputFile.name}.ktl`;
-    const password = msg.args[1];
-    const salt = secureRandom(32);
+    const salt = crypto.secureRandom(32);
     const buffer = await inputFile.arrayBuffer();
     const plaintext = new Uint8Array(buffer);
 
@@ -34,17 +40,15 @@ async function passEncrypt(msg) {
     const url = URL.createObjectURL(blob);
 
     const message = {
-        action: msg.action,
+        action: workerMsgActions.passEncrypt,
         result: { url: url, filename: filename }
     };
     self.postMessage(message);
 }
 
-async function passDecrypt(msg) {
+async function passDecrypt(inputFile, password) {
     const crypto = await Crypto.createInstance();
-    const inputFile = msg.args[0];
     const filename = stripExtension(inputFile.name);
-    const password = msg.args[1];
     const buffer = await inputFile.arrayBuffer();
     const ciphertext = new Uint8Array(buffer);
 
@@ -53,17 +57,29 @@ async function passDecrypt(msg) {
         const blob = new Blob([plaintext], { type: "application/octet-stream" });
         const url = URL.createObjectURL(blob);
         const message = {
-            action: msg.action,
+            action: workerMsgActions.passDecrypt,
             result: { url: url, filename: filename }
         };
         self.postMessage(message);
     } catch (err) {
         const message = {
-            action: msg.action,
+            action: workerMsgActions.passDecrypt,
             result: { exception: { name: err.name, message: err.message } }
         };
         self.postMessage(message);
     }
+}
+
+async function generateKey(password) {
+    const crypto = await Crypto.createInstance();
+    const publicKey = "JHXzGZWRb7PlpmCdulRE4vOEmynQDZOsRSF5nNXjvR7qPiMG";
+    const privateKey = "ZWdrMLOAK6E7V6ntiYlUt8dqb1l5jeSPZoSH2h6xwXadmLQ4t0BKvhG7qpb8YJxBdIYrMvc7TA7/p1LZeWBNXUWixV9w/CZryk7z0/+t+Fj07qPI";
+    const message = {
+        action: workerMsgActions.generateKey,
+        result: { publicKey: publicKey, privateKey: privateKey }
+    };
+
+    self.postMessage(message);
 }
 
 function stripExtension(filename) {

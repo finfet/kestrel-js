@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { base64Decode } from "kestrel-crypto/utils";
+import { useState, useEffect } from "react";
+import { base64Decode, toUtf8Bytes } from "kestrel-crypto/utils";
+import { workerMsgActions } from "./state";
+import { ANIMATION_DURATION, ResultDone } from "./common";
 
 function nameExists(name, contacts) {
     for (let i = 0; i < contacts.length; i++) {
@@ -45,10 +47,53 @@ function validPrivateKey(privateKey) {
     return true;
 }
 
-export function GenKeyPage() {
+function BackButton({ backClick }) {
+    return (
+        <div className="row-container pb-3">
+            <button className="link-button" onClick={backClick}><span className="icon icon-back"></span>Back</button>
+        </div>
+    );
+}
+
+export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading, addContact, backClick }) {
+    const [anim, setAnim] = useState({ start: false, met: false });
+    const [showDone, setShowDone] = useState(false);
+    const [hasError, setHasError] = useState(false);
+    const [errorMsg, setErrorMsg] = useState("");
+    const showSpinner = generateKeyLoading || (anim.start && !anim.met);
+    const generateDisabled = hasError || showSpinner || showDone;
+
+    useEffect(() => {
+        if (generateKeyResult && showDone) {
+            const privateKey = generateKeyResult.privateKey;
+            const publicKey = generateKeyResult.publicKey;
+            console.log("Adding contact mallory");
+            console.log("privateKey:", privateKey);
+            console.log("publicKey :", publicKey);
+        }
+    }, [generateKeyResult, showDone]);
+
+    function generateClick() {
+        setAnim({ start: true, met: false });
+        setHasError(false);
+        setShowDone(true);
+        setTimeout(() => {
+            setAnim({ start: false, met: true });
+        }, ANIMATION_DURATION);
+
+        sendMessage(workerMsgActions.generateKey, [toUtf8Bytes("mallory")]);
+    }
+
     return (
         <div>
+            <BackButton backClick={backClick} />
             <h4>Generate Key</h4>
+            <div className="row-container pt-3">
+                <div>
+                    <button onClick={generateClick} disabled={generateDisabled}>Generate</button>
+                </div>
+                <ResultDone showSpinner={showSpinner} showDone={showDone} doneClick={backClick} />
+            </div>
         </div>
     );
 }
@@ -130,9 +175,7 @@ export function AddKeyPage({ contacts, addContact, backClick }) {
 
     return (
         <div>
-            <div className="row-container pb-3">
-                <button className="link-button" onClick={backClick}><span className="icon icon-back"></span>Back</button>
-            </div>
+            <BackButton backClick={backClick} />
             <h4>Add Key</h4>
             <div className="form-group pt-3">
                 <label htmlFor="name">Name</label>
@@ -255,9 +298,7 @@ export function EditKeyPage({ contacts, contact, editContact, backClick }) {
 
     return (
         <div>
-            <div className="row-container pb-3">
-                <button className="link-button" onClick={backClick}><span className="icon icon-back"></span>Back</button>
-            </div>
+            <BackButton backClick={backClick} />
             <h4>Edit Key</h4>
             <div className="form-group pt-3">
                 <label htmlFor="name">Name</label>
@@ -314,9 +355,7 @@ export function DeleteKeyPage({ contact, deleteContact, backClick }) {
 
     return (
         <div>
-            <div className="row-container pb-3">
-                <button className="link-button" onClick={backClick}><span className="icon icon-back"></span>Back</button>
-            </div>
+            <BackButton backClick={backClick} />
             <h4 className="pb-3">Delete Key</h4>
             { (deleteClicked == false) ? (
                 <ContactCard contact={contact} />

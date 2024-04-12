@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { toUtf8Bytes } from "kestrel-crypto/utils";
 
 import { workerMsgActions } from "./state.js";
-import { DotLoader, ANIMATION_DURATION } from "./common.js";
+import { ResultInfo, ErrorInfo, ANIMATION_DURATION } from "./common.js";
 
 export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, reloadWorker }) {
     const [anim, setAnim] = useState({ start: false, met: false });
@@ -18,6 +18,7 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
 
     const showSpinner = passEncryptLoading || (anim.start && !anim.met);
     const encryptDisabled = validationError || showSpinner || resultShown;
+    const showError = validationError;
     const s100MiB = 100 * (1024 * 1024);
     const s1GiB = 1024 * (1024 * 1024);
     const maxFileSize = s1GiB;
@@ -98,41 +99,16 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
                 <label htmlFor="confirm-password">Confirm</label>
                 <input type="password" id="confirm-password" name="confirm-password" value={confirmPassword} onChange={confirmPasswordChange} />
             </div>
-            { validationError ? (
-                <div className="mt-3 error">Error: {errorMsg}</div>
-                ) : (
-                    <div className="mt-3 error hidden">OK</div>
-                )
-            }
+            <ErrorInfo showError={showError} errorMsg={errorMsg} />
             <div className="pt-3 row-container">
                 <div>
                     <button onClick={encryptClick} disabled={encryptDisabled}>Encrypt</button>
                 </div>
-                { showSpinner ? (
-                        <div className="pt-2">
-                            <DotLoader classes={"ml-1 mt-1"} />
-                        </div>
-                    ) : (
-                        <>
-                        { resultShown ? (
-                            <>
-                            <div className="pt-2">
-                                <a href={passEncryptResult.url} download={passEncryptResult.filename}>
-                                    <span className="icon icon-download"></span>
-                                    <span>{passEncryptResult.filename}</span>
-                                </a>
-                            </div>
-                            <div>
-                                <button onClick={doneClick}>Done</button>
-                            </div>
-                            </>
-                            ) : (
-                                <></>
-                            )
-                        }
-                        </>
-                    )
-                }
+                <ResultInfo
+                    showSpinner={showSpinner}
+                    resultShown={resultShown}
+                    result={passEncryptResult}
+                    doneClick={doneClick} />
             </div>
         </div>
     );
