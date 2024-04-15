@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { toUtf8Bytes } from "kestrel-crypto/utils";
 
 import { workerMsgActions } from "./state.js";
-import { ResultInfo, ErrorInfo, ANIMATION_DURATION } from "./common.js";
+import { ResultInfo, MessageInfo, ANIMATION_DURATION } from "./common.js";
 
 export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoading, reloadWorker }) {
     const [anim, setAnim] = useState({ start: false, met: false });
@@ -104,7 +104,7 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
                 <label htmlFor="password">Password</label>
                 <input type="password" id="password" name="password" value={password} onChange={passwordChange} />
             </div>
-            <ErrorInfo showError={showError} errorMsg={errorMsg} />
+            <MessageInfo showMsg={showError} msg={errorMsg} msgType="error" />
             <div className="pt-3 row-container">
                 <div>
                     <button onClick={decryptClick} disabled={decryptDisabled}>Decrypt</button>

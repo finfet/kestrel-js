@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { toUtf8Bytes } from "kestrel-crypto/utils";
 
 import { workerMsgActions } from "./state.js";
-import { ResultInfo, ErrorInfo, ANIMATION_DURATION } from "./common.js";
+import { ResultInfo, MessageInfo, ANIMATION_DURATION } from "./common.js";
 
 export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, reloadWorker }) {
     const [anim, setAnim] = useState({ start: false, met: false });
@@ -99,7 +99,7 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
                 <label htmlFor="confirm-password">Confirm</label>
                 <input type="password" id="confirm-password" name="confirm-password" value={confirmPassword} onChange={confirmPasswordChange} />
             </div>
-            <ErrorInfo showError={showError} errorMsg={errorMsg} />
+            <MessageInfo showMsg={showError} msg={errorMsg} msgType="error" />
             <div className="pt-3 row-container">
                 <div>
                     <button onClick={encryptClick} disabled={encryptDisabled}>Encrypt</button>

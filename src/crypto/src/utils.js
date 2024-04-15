@@ -31,7 +31,7 @@ export function fromUtf8Bytes(bytes) {
 }
 
 export function base64Encode(bytes) {
-    const binStr = String.fromCodePoint(...bytes);
+    const binStr = Array.from(bytes, (b) => String.fromCodePoint(b)).join("");
     return btoa(binStr);
 }
 

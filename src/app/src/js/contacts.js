@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base64Decode, toUtf8Bytes } from "kestrel-crypto/utils";
 import { workerMsgActions } from "./state";
-import { ANIMATION_DURATION, ResultDone } from "./common";
+import { ANIMATION_DURATION, MessageInfo, ResultDone } from "./common";
 
 function nameExists(name, contacts) {
     for (let i = 0; i < contacts.length; i++) {
@@ -55,39 +55,102 @@ function BackButton({ backClick }) {
     );
 }
 
-export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading, addContact, backClick }) {
+export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading, contacts, addContact, backClick }) {
     const [anim, setAnim] = useState({ start: false, met: false });
     const [showDone, setShowDone] = useState(false);
-    const [hasError, setHasError] = useState(false);
+    const [validationError, setValidationError] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
+
+    const [success, setSuccess] = useState(false);
+    const [successMsg, setSuccessMsg] = useState("");
+
+    const [name, setName] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+
     const showSpinner = generateKeyLoading || (anim.start && !anim.met);
-    const generateDisabled = hasError || showSpinner || showDone;
+    const showError = validationError && !success;
+    const showSuccess = success && showDone && !showSpinner && !validationError;
+    const inputDisabled = showSpinner || showDone;
+    const generateDisabled = validationError || showSpinner || showDone;
 
     useEffect(() => {
         if (generateKeyResult && showDone) {
             const privateKey = generateKeyResult.privateKey;
             const publicKey = generateKeyResult.publicKey;
-            console.log("Adding contact mallory");
+            console.log("Adding contact:", name);
             console.log("privateKey:", privateKey);
             console.log("publicKey :", publicKey);
+            console.log("-----");
         }
     }, [generateKeyResult, showDone]);
 
+    function nameChange(event) {
+        setValidationError(false);
+        setName(event.target.value);
+    }
+
+    function passwordChange(event) {
+        setValidationError(false);
+        setPassword(event.target.value);
+    }
+
+    function confirmPasswordChange(event) {
+        setValidationError(false);
+        setConfirmPassword(event.target.value);
+    }
+
     function generateClick() {
+        if (name.length < 1) {
+            setValidationError(true);
+            setErrorMsg("Please enter a name");
+            return;
+        }
+
+        if (nameExists(name, contacts)) {
+            setValidationError(true);
+            setErrorMsg("Contact name already exists");
+            return;
+        }
+
+        if (password != confirmPassword) {
+            setValidationError(true);
+            setErrorMsg("Passwords do not match");
+            return;
+        }
+
         setAnim({ start: true, met: false });
-        setHasError(false);
-        setShowDone(true);
         setTimeout(() => {
             setAnim({ start: false, met: true });
         }, ANIMATION_DURATION);
 
-        sendMessage(workerMsgActions.generateKey, [toUtf8Bytes("mallory")]);
+        sendMessage(workerMsgActions.generateKey, [toUtf8Bytes(password)]);
+        setShowDone(true);
+        setSuccess(true);
+        setSuccessMsg("Key generated");
     }
 
     return (
         <div>
             <BackButton backClick={backClick} />
             <h4>Generate Key</h4>
+            <div className="form-group pt-3">
+                <label htmlFor="name">Name</label>
+                <input type="text" id="name" name="name" value={name} onChange={nameChange} disabled={inputDisabled} autoFocus />
+            </div>
+            <div className="form-group pt-3">
+                <label htmlFor="password">Password</label>
+                <input type="password" id="password" name="password" value={password} onChange={passwordChange} disabled={inputDisabled} />
+            </div>
+            <div className="form-group pt-1">
+                <label htmlFor="confirm-password">Confirm</label>
+                <input type="password" id="confirm-password" name="confirm-password" value={confirmPassword} onChange={confirmPasswordChange} disabled={inputDisabled} />
+            </div>
+            { showError ? (
+                <MessageInfo showMsg={showError} msg={errorMsg} msgType="error" />
+            ) : (
+                <MessageInfo showMsg={showSuccess} msg={successMsg} msgType="success" />
+            )}
             <div className="row-container pt-3">
                 <div>
                     <button onClick={generateClick} disabled={generateDisabled}>Generate</button>
@@ -108,6 +171,8 @@ export function AddKeyPage({ contacts, addContact, backClick }) {
     const [success, setSuccess] = useState(false);
     const [successMsg, setSuccessMsg] = useState("");
 
+    const showError = hasError && !success;
+    const showSuccess = success && !hasError;
     const addDisabled = hasError || contactAdded;
 
     function nameChange(event) {
@@ -179,7 +244,7 @@ export function AddKeyPage({ contacts, addContact, backClick }) {
             <h4>Add Key</h4>
             <div className="form-group pt-3">
                 <label htmlFor="name">Name</label>
-                <input type="text" id="name" name="name" value={name} onChange={nameChange} disabled={contactAdded} />
+                <input type="text" id="name" name="name" value={name} onChange={nameChange} disabled={contactAdded} autoFocus />
             </div>
             <div className="form-group pt-3">
                 <label htmlFor="public-key">Public Key</label>
@@ -189,24 +254,16 @@ export function AddKeyPage({ contacts, addContact, backClick }) {
                 <label htmlFor="private-key">Private Key</label>
                 <textarea id="private-key" name="private-key" rows="6" value={privateKey} onChange={privateKeyChange} disabled={contactAdded} />
             </div>
-            { (hasError == true) ? (
-                    <div className="mt-3 error">Error: {errorMsg}</div>
-                ) : (
-                    <div className="mt-3 error hidden">OK</div>
-                )
-            }
-            {
-                (success == true) ? (
-                    <div className="mt-3 success">{successMsg}</div>
-                ) : (
-                    <div className="mt-3 success hidden">OK</div>
-                )
-            }
+            { showError ? (
+                <MessageInfo showMsg={showError} msg={errorMsg} msgType="error" />
+            ) : (
+                <MessageInfo showMsg={showSuccess} msg={successMsg} msgType="success" />
+            )}
             <div className="row-container pt-3">
                 <div>
                     <button onClick={addClick} disabled={addDisabled}>Add</button>
                 </div>
-                { (contactAdded == true) ? (
+                { contactAdded ? (
                     <div>
                         <button onClick={backClick}>Done</button>
                     </div>

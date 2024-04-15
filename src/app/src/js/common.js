@@ -15,14 +15,21 @@ export function DotLoader({ classes }) {
     );
 }
 
-export function ErrorInfo({ showError, errorMsg }) {
-    if (showError) {
+export function MessageInfo({ showMsg, msg, msgType }) {
+    const showClasses = "mt-3 " + msgType;
+    const hideClasses = "mt-3 hidden " + msgType;
+    let msgFmt = msg;
+    if (msgType == "error") {
+        msgFmt = "Error: " + msg;
+    }
+
+    if (showMsg) {
         return (
-            <div className="mt-3 error">Error: {errorMsg}</div>
+            <div className={showClasses}>{msgFmt}</div>
         );
     } else {
         return (
-            <div className="mt-3 error hidden">OK</div>
+            <div className={hideClasses}>OK</div>
         );
     }
 }

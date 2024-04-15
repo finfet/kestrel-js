@@ -277,6 +277,7 @@ export default function App() {
                     sendMessage={sendMessage}
                     generateKeyResult={state.generateKeyResult}
                     generateKeyLoading={state.generateKeyLoading}
+                    contacts={state.contacts}
                     addContact={addContact}
                     backClick={navContactsClick}
                 />
