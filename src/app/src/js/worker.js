@@ -72,6 +72,11 @@ async function passDecrypt(inputFile, password) {
 
 async function generateKey(password) {
     const crypto = await Crypto.createInstance();
+
+    // const privateKey = crypto.secureRandom(32);
+    // const publicKey = crypto.x25519DerivePublic(privateKey);
+    // const salt = crypto.secureRandom(32);
+
     const publicKey = "JHXzGZWRb7PlpmCdulRE4vOEmynQDZOsRSF5nNXjvR7qPiMG";
     const privateKey = "ZWdrMLOAK6E7V6ntiYlUt8dqb1l5jeSPZoSH2h6xwXadmLQ4t0BKvhG7qpb8YJxBdIYrMvc7TA7/p1LZeWBNXUWixV9w/CZryk7z0/+t+Fj07qPI";
     const message = {

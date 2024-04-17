@@ -107,6 +107,12 @@ export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading,
             return;
         }
 
+        if (name.length > 128) {
+            setHasError(true);
+            setErrorMsg("Names must be less than 128 characters");
+            return;
+        }
+
         if (nameExists(name, contacts)) {
             setValidationError(true);
             setErrorMsg("Contact name already exists");
@@ -197,6 +203,12 @@ export function AddKeyPage({ contacts, addContact, backClick }) {
         if (name.length < 1) {
             setHasError(true);
             setErrorMsg("Please enter a name");
+            return;
+        }
+
+        if (name.length > 128) {
+            setHasError(true);
+            setErrorMsg("Names must be less than 128 characters");
             return;
         }
 
