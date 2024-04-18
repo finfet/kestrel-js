@@ -29,7 +29,7 @@ function validPublicKey(pubKey) {
         if (bytes.length != 36) {
             return false;
         }
-    } catch (_) {
+    } catch {
         return false;
     }
     return true;
@@ -41,7 +41,7 @@ function validPrivateKey(privateKey) {
         if (bytes.length != 84) {
             return false;
         }
-    } catch (_) {
+    } catch {
         return false;
     }
     return true;
@@ -50,7 +50,9 @@ function validPrivateKey(privateKey) {
 function BackButton({ backClick }) {
     return (
         <div className="row-container pb-3">
-            <button className="link-button" onClick={backClick}><span className="icon icon-back"></span>Back</button>
+            <div>
+                <button className="link-button" onClick={backClick}><span className="icon icon-back"></span>Back</button>
+            </div>
         </div>
     );
 }
@@ -78,10 +80,11 @@ export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading,
         if (generateKeyResult && showDone) {
             const privateKey = generateKeyResult.privateKey;
             const publicKey = generateKeyResult.publicKey;
-            console.log("Adding contact:", name);
-            console.log("privateKey:", privateKey);
-            console.log("publicKey :", publicKey);
-            console.log("-----");
+            addContact({
+                name: name,
+                publicKey: publicKey,
+                privateKey: privateKey,
+            });
         }
     }, [generateKeyResult, showDone]);
 

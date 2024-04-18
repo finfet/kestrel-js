@@ -1,10 +1,37 @@
 import init, * as kcrypto from "./kestrel_wasm.js";
 import kwasm from "./kestrel_wasm_bg.wasm";
 
+/**
+ * Kestrel cryptographic functions
+ *
+ * Exceptions that are throw are instances of new Error with the message
+ * from the error included and the name property set to one of:
+ *
+ * ChaPolyDecryptError
+ *
+ * EncryptError::UnexpectedData
+ * EncryptError::IORead
+ * EncryptError::IOWrite
+ *
+ * DecryptError::ChunkLen
+ * DecryptError::ChaPolyDecrypt
+ * DecryptError::UnexpectedData
+ * DecryptError::IORead
+ * DecryptError::IOWrite
+ * DecryptError::Other
+ *
+ * ErrorMessage
+ * Unknown
+ *
+ * Note the EncryptError and IO portions of DecryptError should not occur
+ * because we are reding from Uint8Arrays. This is a holdout from disk io
+ * operations in the rust library. ErrorMessage and Unknown should also not
+ * occur and are protections against an update to error handling in the
+ * underlying library.
+ *
+ */
 export class Crypto {
     /**
-     * Kestrel cryptographic functions
-     *
      * You must use createInstance()
      */
     constructor() {
@@ -100,6 +127,7 @@ export class Crypto {
      * @param {Uint8Array} nonce 12 byte nonce
      * @param {Uint8Array} ciphertext Ciphertext to decrypt
      * @param {Uint8Array} aad Addtional authenticated data
+     * @throws ChaPolyDecryptError
      * @returns {Uint8Array} Plaintext
      */
     chapolyDecrypt(key, nonce, ciphertext, aad) {

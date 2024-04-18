@@ -1,4 +1,5 @@
 import { Crypto } from "kestrel-crypto";
+import { lockPrivateKey, encodePublicKey } from "./keyring.js";
 
 const workerMsgActions = {
     passEncrypt: "pass_encrypt",
@@ -73,15 +74,15 @@ async function passDecrypt(inputFile, password) {
 async function generateKey(password) {
     const crypto = await Crypto.createInstance();
 
-    // const privateKey = crypto.secureRandom(32);
-    // const publicKey = crypto.x25519DerivePublic(privateKey);
-    // const salt = crypto.secureRandom(32);
+    const privateKey = crypto.secureRandom(32);
+    const publicKey = crypto.x25519DerivePublic(privateKey);
+    const salt = crypto.secureRandom(32);
+    const b64PrivateKey = lockPrivateKey(crypto, privateKey, password, salt);
+    const b64PublicKey = encodePublicKey(crypto, publicKey);
 
-    const publicKey = "JHXzGZWRb7PlpmCdulRE4vOEmynQDZOsRSF5nNXjvR7qPiMG";
-    const privateKey = "ZWdrMLOAK6E7V6ntiYlUt8dqb1l5jeSPZoSH2h6xwXadmLQ4t0BKvhG7qpb8YJxBdIYrMvc7TA7/p1LZeWBNXUWixV9w/CZryk7z0/+t+Fj07qPI";
     const message = {
         action: workerMsgActions.generateKey,
-        result: { publicKey: publicKey, privateKey: privateKey }
+        result: { publicKey: b64PublicKey, privateKey: b64PrivateKey }
     };
 
     self.postMessage(message);

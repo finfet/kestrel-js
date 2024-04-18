@@ -4,9 +4,13 @@
     "description": "Kestrel - Easy File Encryption",
     "type": "module",
     "private": true,
+    "exports": {
+        "./keyring": "./src/js/keyring.js"
+    },
     "scripts": {
         "build": "rollup -c",
         "dev": "rollup -c -w",
+        "test": "node --test tests",
         "copy": "node copy.js"
     },
     "repository": {

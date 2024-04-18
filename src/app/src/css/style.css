@@ -120,10 +120,9 @@ p, h1, h2, h3, h4, h5, h6 {
 button {
     border: 2px solid black;
     padding: 0px 5px 0px 5px;
-    height: 34px;
-    min-width: 68px;
+    height: 35px;
+    min-width: 70px;
     text-align: center;
-    line-height: 34px;
     overflow: hidden;
     text-overflow: ellipsis;
     color: #000;
@@ -315,18 +314,19 @@ a:visited {
 
 .icon {
     display: inline-block;
-    width: 24px;
+    width: 28px;
     height: 24px;
     background-repeat: no-repeat;
     vertical-align: middle;
 }
 
 button .icon {
-    margin-top: -1px;
+    margin-top: -4px;
 }
 
-button.link-button .icon {
-    margin-top: 0px;
+button.link-button .icon.icon-back {
+    margin-left: -6px;
+    width: 24px;
 }
 
 .icon.icon-back {
