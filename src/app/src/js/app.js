@@ -301,7 +301,14 @@ export default function App() {
                 />
             );
         } else if (state.contactsNavState == contactsNavStates.changePass) {
-            selectedPage = (<ChangePassPage />);
+            selectedPage = (
+                <ChangePassPage
+                    sendMessage={sendMessage}
+                    changePassResult={state.changePassResult}
+                    changePassLoading={state.changePassLoading}
+                    backClick={navContactsClick}
+                />
+            );
         } else {
             selectedPage = (
                 <ContactsPage

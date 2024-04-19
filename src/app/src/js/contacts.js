@@ -577,12 +577,13 @@ export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, 
     );
 }
 
-export function ChangePassPage() {
+export function ChangePassPage({ sendMessage, changePassResult, changePassLoading, backClick }) {
     return (
         <div>
+            <BackButton backClick={backClick} />
             <h4>Change Password</h4>
         </div>
-    )
+    );
 }
 
 function ContactCard({ contact }) {

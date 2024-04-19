@@ -5,7 +5,8 @@ const workerMsgActions = {
     passEncrypt: "pass_encrypt",
     passDecrypt: "pass_decrypt",
     generateKey: "generate_key",
-    extractKey: "extract_key"
+    extractKey: "extract_key",
+    changePass: "change_pass"
 }
 
 self.onmessage = (e) => {
@@ -23,6 +24,9 @@ self.onmessage = (e) => {
                 break;
             case workerMsgActions.extractKey:
                 extractKey(msg.args[0], msg.args[1]);
+                break;
+            case workerMsgActions.changePass:
+                changePass(msg.args[0], msg.args[1], msg.args[2]);
                 break;
             default:
                 self.postMessage({ action: "exception", result: { type: "unknown_action", msg: "Cannot take unknown action" }})
@@ -110,6 +114,29 @@ async function extractKey(b64PrivateKey, password) {
             action: workerMsgActions.extractKey,
             result: { exception: { name: err.name, message: err.message }}
         };
+        self.postMessage(message);
+    }
+}
+
+async function changePass(b64PrivateKey, oldPassword, newPassword) {
+    const crypto = await Crypto.createInstance();
+    try {
+        const privateKey = unlockPrivateKey(crypto, b64PrivateKey, oldPassword);
+        const salt = crypto.secureRandom(32);
+        const updatedB64PrivateKey = lockPrivateKey(crypto, privateKey, newPassword, salt);
+
+        const message = {
+            action: workerMsgActions.changePass,
+            result: { privateKey: updatedB64PrivateKey }
+        }
+
+        self.postMessage(message);
+    } catch (err) {
+        const message = {
+            action: workerMsgActions.changePass,
+            result: { exception: { name: err.name, message: err.message }}
+        };
+
         self.postMessage(message);
     }
 }

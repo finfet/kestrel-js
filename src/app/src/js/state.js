@@ -2,7 +2,8 @@ export const workerMsgActions = {
     passEncrypt: "pass_encrypt",
     passDecrypt: "pass_decrypt",
     generateKey: "generate_key",
-    extractKey: "extract_key"
+    extractKey: "extract_key",
+    changePass: "change_pass",
 }
 
 export const appNavStates = {
@@ -55,7 +56,9 @@ export const initialState = {
     generateKeyResult: null,
     generateKeyLoading: false,
     extractKeyResult: null,
-    extractKeyLoading: false
+    extractKeyLoading: false,
+    changePassResult: null,
+    changePassLoading: false
 }
 
 export function reducer(state, action) {
@@ -87,6 +90,13 @@ export function reducer(state, action) {
             extractKeyResult: null,
             extractKeyLoading: true
         };
+    } else if (action.action == "send" && action.msg.action == workerMsgActions.changePass) {
+        return {
+            ...state,
+            hasError: null,
+            changePassResult: null,
+            changePassLoading: true
+        };
     } else if (action.action == "recv" && action.msg.action == workerMsgActions.passEncrypt) {
         return {
             ...state,
@@ -110,6 +120,12 @@ export function reducer(state, action) {
             ...state,
             extractKeyResult: action.msg.result,
             extractKeyLoading: false
+        };
+    } else if (action.action == "recv" && action.msg.action == workerMsgActions.changePass) {
+        return {
+            ...state,
+            changePassResult: action.msg.result,
+            changePassLoading: false
         };
     } else if (action.action == "recv" && action.msg.action == "init") {
         return {
