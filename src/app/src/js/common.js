@@ -34,7 +34,7 @@ export function MessageInfo({ showMsg, msg, msgType }) {
     }
 }
 
-export function ResultDone({ showSpinner, showDone, doneClick }) {
+export function ResultDone({ showSpinner, showDone, doneClick, backClick }) {
     if (showSpinner) {
         return (
             <div className="pt-2">
@@ -51,7 +51,11 @@ export function ResultDone({ showSpinner, showDone, doneClick }) {
         );
     }
 
-    return (<></>);
+    return (
+        <div>
+            <button onClick={backClick}>Cancel</button>
+        </div>
+    );
 }
 
 export function ResultInfo({ showSpinner, resultShown, result, doneClick }) {

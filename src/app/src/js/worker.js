@@ -1,10 +1,11 @@
 import { Crypto } from "kestrel-crypto";
-import { lockPrivateKey, encodePublicKey } from "./keyring.js";
+import { lockPrivateKey, unlockPrivateKey, encodePublicKey } from "./keyring.js";
 
 const workerMsgActions = {
     passEncrypt: "pass_encrypt",
     passDecrypt: "pass_decrypt",
-    generateKey: "generate_key"
+    generateKey: "generate_key",
+    extractKey: "extract_key"
 }
 
 self.onmessage = (e) => {
@@ -19,6 +20,9 @@ self.onmessage = (e) => {
                 break;
             case workerMsgActions.generateKey:
                 generateKey(msg.args[0]);
+                break;
+            case workerMsgActions.extractKey:
+                extractKey(msg.args[0], msg.args[1]);
                 break;
             default:
                 self.postMessage({ action: "exception", result: { type: "unknown_action", msg: "Cannot take unknown action" }})
@@ -86,6 +90,28 @@ async function generateKey(password) {
     };
 
     self.postMessage(message);
+}
+
+async function extractKey(b64PrivateKey, password) {
+    const crypto = await Crypto.createInstance();
+    try {
+        const privateKey = unlockPrivateKey(crypto, b64PrivateKey, password);
+        const publicKey = crypto.x25519DerivePublic(privateKey);
+        const b64PublicKey = encodePublicKey(crypto, publicKey);
+
+        const message = {
+            action: workerMsgActions.extractKey,
+            result: { publicKey: b64PublicKey }
+        }
+
+        self.postMessage(message);
+    } catch (err) {
+        const message = {
+            action: workerMsgActions.extractKey,
+            result: { exception: { name: err.name, message: err.message }}
+        };
+        self.postMessage(message);
+    }
 }
 
 function stripExtension(filename) {

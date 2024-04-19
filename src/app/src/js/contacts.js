@@ -164,7 +164,7 @@ export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading,
                 <div>
                     <button onClick={generateClick} disabled={generateDisabled}>Generate</button>
                 </div>
-                <ResultDone showSpinner={showSpinner} showDone={showDone} doneClick={backClick} />
+                <ResultDone showSpinner={showSpinner} showDone={showDone} doneClick={backClick} backClick={backClick} />
             </div>
         </div>
     );
@@ -465,10 +465,114 @@ export function DeleteKeyPage({ contact, deleteContact, backClick }) {
     );
 }
 
-export function ExtractPage() {
+export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, backClick }) {
+    const [anim, setAnim] = useState({ start: false, met: false });
+    const [showDone, setShowDone] = useState(false);
+    const [privateKey, setPrivateKey] = useState("");
+    const [password, setPassword] = useState("");
+    const [hasError, setHasError] = useState(false);
+    const [validationError, setValidationError] = useState(false);
+    const [errorMsg, setErrorMsg] = useState("");
+    const [success, setSuccess] = useState(false);
+    const [successMsg, setSuccessMsg] = useState("");
+
+    const showError = validationError || hasError;
+
+    const showSpinner = extractKeyLoading || (anim.start && !anim.met);
+    const extractDisabled = hasError || showSpinner || showDone;
+
+    useEffect(() => {
+        if (extractKeyResult && extractKeyResult.exception) {
+            let ex = extractKeyResult.exception;
+            setHasError(true);
+            setSuccess(false);
+            setShowDone(false);
+            console.log("ex.name:", ex.name);
+            if (ex.name == "ChaPolyDecryptError") {
+                setErrorMsg("Decrypt Failed. Check password used.");
+            } else {
+                setErrorMsg(ex.message);
+            }
+        } else if (extractKeyResult && showDone) {
+            setSuccess(true);
+            setSuccessMsg(extractKeyResult.publicKey);
+        }
+    }, [extractKeyResult, showDone]);
+
+    function inputFocus(_event) {
+        setHasError(false);
+    }
+
+    function privateKeyChange(event) {
+        setValidationError(false);
+        setHasError(false);
+        setSuccess(false);
+        setPrivateKey(event.target.value);
+    }
+
+    function passwordChange(event) {
+        setValidationError(false);
+        setHasError(false);
+        setSuccess(false);
+        setPassword(event.target.value);
+    }
+
+    function extractClick() {
+        const cleanedPrivKey = privateKey.replaceAll("\n", "").replaceAll(" ", "");
+        if (cleanedPrivKey.length < 1) {
+            setValidationError(true);
+            setErrorMsg("Please enter a private key");
+        }
+
+        if (!validPrivateKey(cleanedPrivKey)) {
+            setValidationError(true);
+            setErrorMsg("Invalid private key");
+            return;
+        }
+
+        setAnim({ start: true, met: false });
+        setTimeout(() => {
+            setAnim({ start: false, met: true });
+        }, ANIMATION_DURATION);
+
+        sendMessage(workerMsgActions.extractKey, [cleanedPrivKey, toUtf8Bytes(password)]);
+        setShowDone(true);
+    }
+
     return (
         <div>
+            <BackButton backClick={backClick} />
             <h4>Extract Public Key</h4>
+            <div className="form-group pt-3">
+                <label htmlFor="private-key">Private Key</label>
+                <textarea id="private-key" name="private-key" rows="6" value={privateKey} onChange={privateKeyChange} disabled={showDone} onFocus={inputFocus} />
+            </div>
+            <div className="form-group pt-3">
+                <label htmlFor="password">Password</label>
+                <input type="password" id="password" name="password" value={password} onChange={passwordChange} disabled={showDone} onFocus={inputFocus} />
+            </div>
+            { success ? (
+                <div className="pt-3">
+                    <ul className="minimal-ul">
+                        <li>Public Key</li>
+                        <li><span className="text-mono" style={{ textOverflow: "auto" }}>{successMsg}</span></li>
+                    </ul>
+                </div>
+            ) : (
+                <div className="pt-3 hidden">
+                    <ul className="minimal-ul">
+                        <li>Public Key</li>
+                        <li><span className="text-mono" style={{ textOverflow: "auto" }}>EMPTY</span></li>
+                    </ul>
+                </div>
+            )}
+            <MessageInfo showMsg={showError} msg={errorMsg} msgType="error" />
+            <div className="row-container pt-3">
+                <div>
+                    <button onClick={extractClick} disabled={extractDisabled}>Extract</button>
+                </div>
+                <ResultDone showSpinner={showSpinner} showDone={showDone} doneClick={backClick} backClick={backClick} />
+            </div>
         </div>
     );
 }

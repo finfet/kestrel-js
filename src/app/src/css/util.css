@@ -10,6 +10,12 @@
     padding-top: 4px;
 }
 
+.info {
+    border-left: 4px solid #808080;
+    padding-left: 4px;
+    padding-top: 4px;
+}
+
 .hidden {
     visibility: hidden;
 }

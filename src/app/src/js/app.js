@@ -226,6 +226,9 @@ export default function App() {
                     contactsClick={navContactsClick}
                     active={state.appNavState} />
                 <div className="error">Error: {state.hasError.msg}</div>
+                <div className="pt-3">
+                    <a href="/">Refresh</a>
+                </div>
             </div>
         )
     }
@@ -289,7 +292,14 @@ export default function App() {
         } else if (state.contactsNavState == contactsNavStates.deleteKey) {
             selectedPage = (<DeleteKeyPage contact={state.contactToDelete} deleteContact={deleteContact} backClick={navContactsClick} />);
         } else if (state.contactsNavState == contactsNavStates.extract) {
-            selectedPage = (<ExtractPage />);
+            selectedPage = (
+                <ExtractPage
+                    sendMessage={sendMessage}
+                    extractKeyResult={state.extractKeyResult}
+                    extractKeyLoading={state.extractKeyLoading}
+                    backClick={navContactsClick}
+                />
+            );
         } else if (state.contactsNavState == contactsNavStates.changePass) {
             selectedPage = (<ChangePassPage />);
         } else {
