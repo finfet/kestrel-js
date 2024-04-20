@@ -85,3 +85,17 @@ export function ResultInfo({ showSpinner, resultShown, result, doneClick }) {
 
     return (<></>);
 }
+
+export function SelectBox({ options, onChange, id}) {
+    const optionValues = options.map(option => (
+        <option key={option} value={option}>
+            {option}
+        </option>
+    ));
+
+    return (
+        <select className="pt-1" id={id} name={id} onChange={e => onChange(e.target.value)}>
+            {optionValues}
+        </select>
+    );
+}

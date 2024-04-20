@@ -304,6 +304,7 @@ export default function App() {
             selectedPage = (
                 <ChangePassPage
                     sendMessage={sendMessage}
+                    contacts={state.contacts}
                     changePassResult={state.changePassResult}
                     changePassLoading={state.changePassLoading}
                     backClick={navContactsClick}

@@ -249,6 +249,25 @@ textarea:disabled {
     border: 2px solid #808080;
 }
 
+select {
+    color: black;
+    background-color: #fff;
+    text-overflow: ellipsis;
+    border: 2px solid black;
+    padding: 2px 5px 2px 5px;
+    max-width: 100%;
+    width: 320px;
+}
+
+select:focus {
+    outline: 2px solid #900000;
+    border: 2px solid #900000;
+}
+
+select:disabled {
+    border: 2px solid #808080;
+}
+
 ul.nav {
     list-style-type: none;
     padding: 0;

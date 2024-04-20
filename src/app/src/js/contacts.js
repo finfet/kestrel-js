@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base64Decode, toUtf8Bytes } from "kestrel-crypto/utils";
 import { workerMsgActions } from "./state";
-import { ANIMATION_DURATION, MessageInfo, ResultDone } from "./common";
+import { ANIMATION_DURATION, MessageInfo, ResultDone, SelectBox } from "./common";
 
 function nameExists(name, contacts) {
     for (let i = 0; i < contacts.length; i++) {
@@ -577,11 +577,34 @@ export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, 
     );
 }
 
-export function ChangePassPage({ sendMessage, changePassResult, changePassLoading, backClick }) {
+export function ChangePassPage({ sendMessage, contacts, changePassResult, changePassLoading, backClick }) {
+    const [name, setName] = useState("");
+    const contactNames = contacts.map(contact => (
+        contact.name
+    ));
+
+    function changePasswordClick() {
+        console.log("changing password");
+    }
+
+    function onNameSelect(n) {
+        setName(n);
+    }
+
     return (
         <div>
             <BackButton backClick={backClick} />
             <h4>Change Password</h4>
+            <div className="form-group pt-3">
+                <label htmlFor="select-contact">Contact</label>
+                <SelectBox options={contactNames} onChange={onNameSelect} />
+            </div>
+            <p>Selected name: {name}</p>
+            <div className="row-container pt-3">
+                <div>
+                    <button onClick={changePasswordClick}>Update</button>
+                </div>
+            </div>
         </div>
     );
 }
