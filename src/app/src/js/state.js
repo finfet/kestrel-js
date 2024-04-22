@@ -246,6 +246,19 @@ export function reducer(state, action) {
             ...state,
             contacts: action.contacts
         };
+    } else if (action.action == "app_error" && action.exception) {
+        let contacts = state.contacts;
+        let contactsInit = state.contactsInit;
+        if (action.exception.type == "invalid_contacts") {
+            contacts = [];
+            contactsInit = true;
+        }
+        return {
+            ...state,
+            contacts: contacts,
+            contactsInit: contactsInit,
+            hasError: action.exception,
+        };
     } else {
         return {
             ...state,

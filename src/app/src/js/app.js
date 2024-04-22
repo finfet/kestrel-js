@@ -64,6 +64,30 @@ function sortContacts(a, b) {
     return 0;
 }
 
+function validContactData(contacts) {
+    if (!contacts instanceof Array) {
+        return false;
+    }
+    for (let i = 0; i < contacts.length; i++) {
+        const contact = contacts[i];
+        if (typeof contact === null ||
+            typeof contact != "object" ||
+            contact.name === undefined ||
+            contact.publicKey === undefined ||
+            contact.privateKey == undefined ||
+            typeof contact.name != "string" ||
+            typeof contact.publicKey != "string" ||
+            typeof contact.privateKey != "string" ||
+            contact.publicKey.length != 48 ||
+            (contact.privateKey.length != 0 && contact.privateKey.length != 112)
+        ) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 export default function App() {
     const [state, dispatch] = useReducer(reducer, initialState);
 
@@ -105,9 +129,20 @@ export default function App() {
         } else {
             try {
                 const contacts = JSON.parse(localStorage.getItem("contacts"));
-                dispatch({ action: "init_contacts", contacts: contacts });
+                const validContacts = validContactData(contacts);
+                if (validContacts) {
+                    dispatch({ action: "init_contacts", contacts: contacts });
+                } else {
+                    dispatch({ action: "app_error", exception: {
+                        type: "invalid_contacts",
+                        msg: "Invalid contact data found"
+                    }});
+                }
             } catch (_e) {
-                dispatch({ action: "init_contacts", contacts: [] });
+                dispatch({ action: "app_error", exception: {
+                    type: "invalid_contacts",
+                    msg: "JSON parse failed. Invalid contact data found."
+                }});
             }
         }
     }, []);
@@ -196,6 +231,18 @@ export default function App() {
         }
         if (idx != -1) {
             contacts.splice(idx, 1);
+        }
+        contacts.sort(sortContacts);
+        dispatch({ action: "update_contacts", contacts: contacts });
+    }
+
+    function changeContactPass(updatedPrivateKey, contactName) {
+        const contacts = [...state.contacts];
+        for (let i = 0; i < contacts.length; i++) {
+            if (contacts[i].name == contactName) {
+                contacts[i].privateKey = updatedPrivateKey;
+                break;
+            }
         }
         contacts.sort(sortContacts);
         dispatch({ action: "update_contacts", contacts: contacts });
@@ -307,6 +354,7 @@ export default function App() {
                     contacts={state.contacts}
                     changePassResult={state.changePassResult}
                     changePassLoading={state.changePassLoading}
+                    changeContactPass={changeContactPass}
                     backClick={navContactsClick}
                 />
             );

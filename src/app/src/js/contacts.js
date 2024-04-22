@@ -266,7 +266,7 @@ export function AddKeyPage({ contacts, addContact, backClick }) {
                 <textarea id="public-key" name="public-key" rows="3" value={publicKey} onChange={publicKeyChange} disabled={contactAdded} />
             </div>
             <div className="form-group pt-3">
-                <label htmlFor="private-key">Private Key</label>
+                <label htmlFor="private-key">Private Key (optional)</label>
                 <textarea id="private-key" name="private-key" rows="6" value={privateKey} onChange={privateKeyChange} disabled={contactAdded} />
             </div>
             { showError ? (
@@ -480,6 +480,7 @@ export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, 
 
     const showSpinner = extractKeyLoading || (anim.start && !anim.met);
     const extractDisabled = hasError || showSpinner || showDone;
+    const inputDisabled = showSpinner || showDone;
 
     useEffect(() => {
         if (extractKeyResult && extractKeyResult.exception) {
@@ -487,7 +488,6 @@ export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, 
             setHasError(true);
             setSuccess(false);
             setShowDone(false);
-            console.log("ex.name:", ex.name);
             if (ex.name == "ChaPolyDecryptError") {
                 setErrorMsg("Decrypt Failed. Check password used.");
             } else {
@@ -522,6 +522,7 @@ export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, 
         if (cleanedPrivKey.length < 1) {
             setValidationError(true);
             setErrorMsg("Please enter a private key");
+            return;
         }
 
         if (!validPrivateKey(cleanedPrivKey)) {
@@ -545,11 +546,17 @@ export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, 
             <h4>Extract Public Key</h4>
             <div className="form-group pt-3">
                 <label htmlFor="private-key">Private Key</label>
-                <textarea id="private-key" name="private-key" rows="6" value={privateKey} onChange={privateKeyChange} disabled={showDone} onFocus={inputFocus} />
+                <textarea id="private-key" name="private-key"
+                    rows="6" value={privateKey}
+                    onChange={privateKeyChange} disabled={inputDisabled}
+                    onFocus={inputFocus} />
             </div>
             <div className="form-group pt-3">
                 <label htmlFor="password">Password</label>
-                <input type="password" id="password" name="password" value={password} onChange={passwordChange} disabled={showDone} onFocus={inputFocus} />
+                <input type="password" id="password"
+                    name="password" value={password}
+                    onChange={passwordChange} disabled={inputDisabled}
+                    onFocus={inputFocus} />
             </div>
             { success ? (
                 <div className="pt-3">
@@ -577,18 +584,121 @@ export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, 
     );
 }
 
-export function ChangePassPage({ sendMessage, contacts, changePassResult, changePassLoading, backClick }) {
-    const [name, setName] = useState("");
-    const contactNames = contacts.map(contact => (
-        contact.name
-    ));
+export function ChangePassPage({ sendMessage, contacts, changePassResult, changePassLoading, changeContactPass, backClick }) {
+    const [contactName, setContactName] = useState("");
+    const [currentPass, setCurrentPass] = useState("");
+    const [updatedPass, setUpdatedPass] = useState("");
+    const [confirmPass, setConfirmPass] = useState("");
 
-    function changePasswordClick() {
-        console.log("changing password");
+    const [anim, setAnim] = useState({ start: false, met: false });
+    const [showDone, setShowDone] = useState(false);
+    const [validationError, setValidationError] = useState(false);
+    const [hasError, setHasError] = useState(false);
+    const [errorMsg, setErrorMsg] = useState("");
+    const [success, setSuccess] = useState(false);
+    const [successMsg, setSuccessMsg] = useState("");
+
+    const showError = validationError || hasError;
+    const showSpinner = changePassLoading || (anim.start && !anim.met);
+    const changePassDisabled = hasError || showSpinner || showDone;
+    const inputDisabled = showSpinner || showDone;
+
+    const validContacts = contacts.map(contact => {
+        if (contact.privateKey != "") {
+            return {
+                display: contact.name,
+                value: contact.name
+            };
+        }
+
+        return contact;
+    }).filter(contact => contact.privateKey != "");
+
+    const blankContact = [{ display: "Select Key", value: "" }];
+    const contactNames = blankContact.concat(validContacts);
+
+    useEffect(() => {
+        if (changePassResult && changePassResult.exception) {
+            let ex = changePassResult.exception;
+            setHasError(true);
+            setSuccess(false);
+            setShowDone(false);
+            if (ex.name == "ChaPolyDecryptError") {
+                setErrorMsg("Decrypt Failed. Check password used.");
+            } else {
+                setErrorMsg(ex.message);
+            }
+        } else if (changePassResult && showDone) {
+            setSuccess(true);
+            setSuccessMsg("Contact updated");
+            changeContactPass(changePassResult.privateKey, contactName);
+        }
+    }, [changePassResult, showDone]);
+
+    function contactNameChange(name) {
+        setValidationError(false);
+        setHasError(false);
+        setSuccess(false);
+        setContactName(name);
     }
 
-    function onNameSelect(n) {
-        setName(n);
+    function currentPassChange(event) {
+        setValidationError(false);
+        setHasError(false);
+        setSuccess(false);
+        setCurrentPass(event.target.value);
+    }
+
+    function updatedPassChange(event) {
+        setValidationError(false);
+        setHasError(false);
+        setSuccess(false);
+        setUpdatedPass(event.target.value);
+    }
+
+    function confirmPassChange(event) {
+        setValidationError(false);
+        setHasError(false);
+        setSuccess(false);
+        setConfirmPass(event.target.value);
+    }
+
+    function inputFocus(_event) {
+        setHasError(false);
+    }
+
+    function changePassClick() {
+        if (contactName == "") {
+            setValidationError(true);
+            setErrorMsg("Please select a key");
+            return;
+        }
+
+        if (updatedPass != confirmPass) {
+            setValidationError(true);
+            setErrorMsg("Passwords do not match");
+        }
+
+        let privateKey = null;
+        for (let i = 0; i < contacts.length; i++) {
+            if (contacts[i].name == contactName) {
+                privateKey = contacts[i].privateKey;
+                break;
+            }
+        }
+
+        if (!privateKey) {
+            setValidationError(true);
+            setErrorMsg("Private key not found");
+        }
+
+        setAnim({ start: true, met: false });
+        setTimeout(() => {
+            setAnim({ start: false, met: true });
+        }, ANIMATION_DURATION);
+
+        sendMessage(workerMsgActions.changePass, [privateKey, toUtf8Bytes(currentPass), toUtf8Bytes(updatedPass)]);
+        setShowDone(true);
     }
 
     return (
@@ -596,14 +706,40 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
             <BackButton backClick={backClick} />
             <h4>Change Password</h4>
             <div className="form-group pt-3">
-                <label htmlFor="select-contact">Contact</label>
-                <SelectBox options={contactNames} onChange={onNameSelect} />
+                <label htmlFor="select-contact">Private Key</label>
+                <SelectBox options={contactNames} onChange={contactNameChange} id="select-key" disabled={inputDisabled} />
             </div>
-            <p>Selected name: {name}</p>
+            <div className="form-group pt-3">
+                <label htmlFor="current-password">Current Password</label>
+                <input type="password" id="current-password"
+                    name="current-password" value={currentPass}
+                    onChange={currentPassChange} disabled={inputDisabled}
+                    onFocus={inputFocus} />
+            </div>
+            <div className="form-group pt-3">
+                <label htmlFor="updated-password">New Password</label>
+                <input type="password" id="updated-password"
+                    name="updated-password" value={updatedPass}
+                    onChange={updatedPassChange} disabled={inputDisabled}
+                    onFocus={inputFocus} />
+            </div>
+            <div className="form-group pt-3">
+                <label htmlFor="confirm-password">Confirm Password</label>
+                <input type="password" id="confirm-password"
+                    name="confirm-password" value={confirmPass}
+                    onChange={confirmPassChange} disabled={inputDisabled}
+                    onFocus={inputFocus} />
+            </div>
+            { showError ? (
+                <MessageInfo showMsg={showError} msg={errorMsg} msgType="error" />
+            ) : (
+                <MessageInfo showMsg={success} msg={successMsg} msgType="success" />
+            )}
             <div className="row-container pt-3">
                 <div>
-                    <button onClick={changePasswordClick}>Update</button>
+                    <button onClick={changePassClick} disabled={changePassDisabled}>Save</button>
                 </div>
+                <ResultDone showSpinner={showSpinner} showDone={showDone} doneClick={backClick} backClick={backClick} />
             </div>
         </div>
     );
