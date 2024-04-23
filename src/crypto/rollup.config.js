@@ -1,4 +1,4 @@
-import { wasm } from '@rollup/plugin-wasm';
+import inline from "./rollup-plugin-inline.js";
 
 export default {
     input: "src/crypto.js",
@@ -8,8 +8,8 @@ export default {
         sourcemap: true
     },
     plugins: [
-        wasm({
-            maxFileSize: 2097152
+        inline({
+            include: ["**/*.wasm"]
         })
     ]
 }

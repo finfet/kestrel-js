@@ -1,5 +1,8 @@
 import init, * as kcrypto from "./kestrel_wasm.js";
+import { base64Decode } from "./utils.js";
 import kwasm from "./kestrel_wasm_bg.wasm";
+
+const wasmData = base64Decode(kwasm);
 
 /**
  * Kestrel cryptographic functions
@@ -42,7 +45,7 @@ export class Crypto {
      * @returns An instance of Crypto
      */
     static async createInstance() {
-        await init(await kwasm());
+        await init(wasmData);
         return new Crypto();
     }
 

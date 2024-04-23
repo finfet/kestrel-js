@@ -677,6 +677,7 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
         if (updatedPass != confirmPass) {
             setValidationError(true);
             setErrorMsg("Passwords do not match");
+            return;
         }
 
         let privateKey = null;
@@ -690,6 +691,7 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
         if (!privateKey) {
             setValidationError(true);
             setErrorMsg("Private key not found");
+            return;
         }
 
         setAnim({ start: true, met: false });
