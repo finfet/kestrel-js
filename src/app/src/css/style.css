@@ -135,7 +135,7 @@ button {
     transition: 0.12s all;
 }
 
-button:active {
+button:active:not(button:disabled, .link-button) {
     transform: scale(0.98);
     box-shadow: 2px 2px #a0a0a0;
 }
@@ -158,12 +158,6 @@ button.link-button {
     border: 0px solid transparent;
     color: #000;
     text-decoration: underline;
-    box-shadow: none;
-    transition: none;
-}
-
-button.link-button:active {
-    transform: none;
     box-shadow: none;
 }
 
@@ -339,7 +333,6 @@ a:visited {
     display: inline-block;
     width: 28px;
     height: 24px;
-    background-repeat: no-repeat;
     vertical-align: middle;
 }
 
@@ -349,31 +342,31 @@ button.link-button .icon.icon-back {
 }
 
 .icon.icon-back {
-    background-image: url("../img/left.svg");
+    color: #000;
 }
 
 button:hover:enabled .icon.icon-back {
-    background-image: url("../img/left-white.svg");
+    color: #fff;
 }
 
 button.link-button:hover:enabled .icon.icon-back {
-    background-image: url("../img/left.svg");
+    color: #000;
 }
 
 .icon.icon-delete {
-    background-image: url("../img/delete.svg");
+    color: #900000;
 }
 
 button:hover:enabled .icon.icon-delete {
-    background-image: url("../img/delete-white.svg");
+    color: #fff;
 }
 
 .icon.icon-download {
-    background-image: url("../img/download.svg");
+    color: #000;
 }
 
 button:hover:enabled .icon.icon-download {
-    background-image: url("../img/download-white.svg");
+    color: #000;
 }
 
 .contact-actions {

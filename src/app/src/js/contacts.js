@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base64Decode, toUtf8Bytes } from "kestrel-crypto/utils";
 import { workerMsgActions } from "./state";
-import { ANIMATION_DURATION, MessageInfo, ResultDone, SelectBox } from "./common";
+import { ANIMATION_DURATION, MessageInfo, ResultDone, SelectBox, DeleteIcon, BackIcon } from "./common";
 
 function nameExists(name, contacts) {
     for (let i = 0; i < contacts.length; i++) {
@@ -51,7 +51,10 @@ function BackButton({ backClick }) {
     return (
         <div className="row-container pb-3">
             <div>
-                <button className="link-button" onClick={backClick}><span className="icon icon-back"></span>Back</button>
+                <button className="link-button" onClick={backClick}>
+                    <BackIcon />
+                    <span>Back</span>
+                </button>
             </div>
         </div>
     );
@@ -103,7 +106,8 @@ export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading,
         setConfirmPassword(event.target.value);
     }
 
-    function generateClick() {
+    function generateClick(event) {
+        event.preventDefault();
         if (name.length < 1) {
             setValidationError(true);
             setErrorMsg("Please enter a name");
@@ -143,6 +147,7 @@ export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading,
         <div>
             <BackButton backClick={backClick} />
             <h4>Generate Key</h4>
+            <form>
             <div className="form-group pt-3">
                 <label htmlFor="name">Name</label>
                 <input type="text" id="name" name="name" value={name} onChange={nameChange} disabled={inputDisabled} autoFocus />
@@ -162,10 +167,11 @@ export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading,
             )}
             <div className="row-container pt-3">
                 <div>
-                    <button onClick={generateClick} disabled={generateDisabled}>Generate</button>
+                    <button type="submit" onClick={generateClick} disabled={generateDisabled}>Generate</button>
                 </div>
                 <ResultDone showSpinner={showSpinner} showDone={showDone} doneClick={backClick} backClick={backClick} />
             </div>
+            </form>
         </div>
     );
 }
@@ -202,7 +208,8 @@ export function AddKeyPage({ contacts, addContact, backClick }) {
         setPrivateKey(event.target.value);
     }
 
-    function addClick() {
+    function addClick(event) {
+        event.preventDefault();
         if (name.length < 1) {
             setHasError(true);
             setErrorMsg("Please enter a name");
@@ -257,6 +264,7 @@ export function AddKeyPage({ contacts, addContact, backClick }) {
         <div>
             <BackButton backClick={backClick} />
             <h4>Add Key</h4>
+            <form>
             <div className="form-group pt-3">
                 <label htmlFor="name">Name</label>
                 <input type="text" id="name" name="name" value={name} onChange={nameChange} disabled={contactAdded} autoFocus />
@@ -276,7 +284,7 @@ export function AddKeyPage({ contacts, addContact, backClick }) {
             )}
             <div className="row-container pt-3">
                 <div>
-                    <button onClick={addClick} disabled={addDisabled}>Add</button>
+                    <button type="submit" onClick={addClick} disabled={addDisabled}>Add</button>
                 </div>
                 { contactAdded ? (
                     <div>
@@ -289,6 +297,7 @@ export function AddKeyPage({ contacts, addContact, backClick }) {
                 )
                 }
             </div>
+            </form>
         </div>
     );
 }
@@ -323,7 +332,8 @@ export function EditKeyPage({ contacts, contact, editContact, backClick }) {
         setPrivateKey(event.target.value);
     }
 
-    function editClick() {
+    function editClick(event) {
+        event.preventDefault();
         if (name.length < 1) {
             setHasError(true);
             setErrorMsg("Please enter a name");
@@ -372,6 +382,7 @@ export function EditKeyPage({ contacts, contact, editContact, backClick }) {
         <div>
             <BackButton backClick={backClick} />
             <h4>Edit Key</h4>
+            <form>
             <div className="form-group pt-3">
                 <label htmlFor="name">Name</label>
                 <input type="text" id="name" name="name" value={name} onChange={nameChange} disabled={contactEdited} />
@@ -399,7 +410,7 @@ export function EditKeyPage({ contacts, contact, editContact, backClick }) {
             }
             <div className="row-container pt-3">
                 <div>
-                    <button onClick={editClick} disabled={editDisabled}>Edit</button>
+                    <button type="submit" onClick={editClick} disabled={editDisabled}>Edit</button>
                 </div>
                 { (contactEdited == true) ? (
                     <div>
@@ -412,6 +423,7 @@ export function EditKeyPage({ contacts, contact, editContact, backClick }) {
                 )
                 }
             </div>
+            </form>
         </div>
     );
 }
@@ -446,7 +458,7 @@ export function DeleteKeyPage({ contact, deleteContact, backClick }) {
             <div className="row-container pt-3">
                 <div>
                     <button onClick={deleteClick} disabled={deleteClicked}>
-                        <span className="icon icon-delete"></span>
+                        <DeleteIcon />
                         <span>Delete</span>
                     </button>
                 </div>
@@ -517,7 +529,8 @@ export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, 
         setPassword(event.target.value);
     }
 
-    function extractClick() {
+    function extractClick(event) {
+        event.preventDefault();
         const cleanedPrivKey = privateKey.replaceAll("\n", "").replaceAll(" ", "");
         if (cleanedPrivKey.length < 1) {
             setValidationError(true);
@@ -544,6 +557,7 @@ export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, 
         <div>
             <BackButton backClick={backClick} />
             <h4>Extract Public Key</h4>
+            <form>
             <div className="form-group pt-3">
                 <label htmlFor="private-key">Private Key</label>
                 <textarea id="private-key" name="private-key"
@@ -576,10 +590,11 @@ export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, 
             <MessageInfo showMsg={showError} msg={errorMsg} msgType="error" />
             <div className="row-container pt-3">
                 <div>
-                    <button onClick={extractClick} disabled={extractDisabled}>Extract</button>
+                    <button type="submit" onClick={extractClick} disabled={extractDisabled}>Extract</button>
                 </div>
                 <ResultDone showSpinner={showSpinner} showDone={showDone} doneClick={backClick} backClick={backClick} />
             </div>
+            </form>
         </div>
     );
 }
@@ -664,7 +679,8 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
         setHasError(false);
     }
 
-    function changePassClick() {
+    function changePassClick(event) {
+        event.preventDefault();
         if (contactName == "") {
             setValidationError(true);
             setErrorMsg("Please select a key");
@@ -704,6 +720,7 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
         <div>
             <BackButton backClick={backClick} />
             <h4>Change Password</h4>
+            <form>
             <div className="form-group pt-3">
                 <label htmlFor="select-contact">Private Key</label>
                 <SelectBox options={contactNames} onChange={contactNameChange} id="select-key" disabled={inputDisabled} />
@@ -736,10 +753,11 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
             )}
             <div className="row-container pt-3">
                 <div>
-                    <button onClick={changePassClick} disabled={changePassDisabled}>Save</button>
+                    <button type="submit" onClick={changePassClick} disabled={changePassDisabled}>Save</button>
                 </div>
                 <ResultDone showSpinner={showSpinner} showDone={showDone} doneClick={backClick} backClick={backClick} />
             </div>
+            </form>
         </div>
     );
 }

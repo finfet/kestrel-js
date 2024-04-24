@@ -23,9 +23,6 @@ const wasmData = base64Decode(kwasm);
  * DecryptError::IOWrite
  * DecryptError::Other
  *
- * ErrorMessage
- * Unknown
- *
  * Note the EncryptError and IO portions of DecryptError should not occur
  * because we are reding from Uint8Arrays. This is a holdout from disk io
  * operations in the rust library. ErrorMessage and Unknown should also not
@@ -191,9 +188,14 @@ export class Crypto {
             let name = wasmError.slice(0, sepIdx);
             let msg = wasmError.slice(sepIdx+1, wasmError.length);
             msg = msg.trim();
-            let ex = new Error(msg);
-            ex.name = name;
-            return ex;
+            if (name == "Unknown" || name == "ErrorMessage") {
+                const ex = new Error("Crypto error");
+                return ex;
+            } else {
+                const ex = new Error(msg);
+                ex.name = name;
+                return ex;
+            }
         }
     }
 }

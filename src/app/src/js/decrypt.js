@@ -18,7 +18,7 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
     const [password, setPassword] = useState("");
 
     const showSpinner = passDecryptLoading || (anim.start && !anim.met);
-    const decryptDisabled = validationError || showSpinner || resultShown;
+    const decryptDisabled = hasError || showSpinner || resultShown;
     const showError = validationError || hasError;
 
     // 1GiB + file format overhead (32 bytes per 64k + 36 byte header)
@@ -56,7 +56,8 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
         setPassword(event.target.value);
     }
 
-    function decryptClick() {
+    function decryptClick(event) {
+        event.preventDefault();
         if (!ciphertextFile) {
             setValidationError(true);
             setErrorMsg("Please select a file");
@@ -103,6 +104,7 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
     return (
         <div>
             <h4>Decrypt with Password</h4>
+            <form>
             <div className="form-group pt-3">
                 <label htmlFor="ciphertext-file">Select File</label>
                 <input className="file-input" type="file" id="ciphertext-file" name="ciphertext-file" ref={fileInputField} onChange={fileChange} onFocus={inputFocus} />
@@ -114,7 +116,7 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
             <MessageInfo showMsg={showError} msg={errorMsg} msgType="error" />
             <div className="pt-3 row-container">
                 <div>
-                    <button onClick={decryptClick} disabled={decryptDisabled}>Decrypt</button>
+                    <button type="submit" onClick={decryptClick} disabled={decryptDisabled}>Decrypt</button>
                 </div>
                 <ResultInfo
                     showSpinner={showSpinner}
@@ -122,6 +124,7 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
                     result={passDecryptResult}
                     doneClick={doneClick} />
             </div>
+            </form>
         </div>
     );
 }

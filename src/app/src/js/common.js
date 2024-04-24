@@ -1,6 +1,45 @@
 
 export const ANIMATION_DURATION = 200;
 
+export function DownloadIcon() {
+    return (
+        <span className="icon icon-download">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+        </span>
+    );
+}
+
+export function BackIcon() {
+    return (
+        <span className="icon icon-back">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </span>
+    );
+}
+
+export function DeleteIcon() {
+    return (
+        <span className="icon icon-delete">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+            strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+        </span>
+    );
+}
+
 export function DotLoader({ classes }) {
     if (!classes) {
         classes = "";
@@ -72,7 +111,7 @@ export function ResultInfo({ showSpinner, resultShown, result, doneClick }) {
             <>
             <div className="pt-2">
                 <a href={result.url} download={result.filename}>
-                    <span className="icon icon-download"></span>
+                    <DownloadIcon />
                     <span>{result.filename}</span>
                 </a>
             </div>
