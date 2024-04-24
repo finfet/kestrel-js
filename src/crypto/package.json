@@ -9,10 +9,10 @@
         "./utils": "./src/utils.js"
     },
     "scripts": {
-        "build": "rollup -c",
-        "dev": "rollup -c -w",
+        "build": "esbuild kestrel-crypto.bundle=src/crypto.js --bundle --target=esnext --format=esm --outdir=dist --loader:.wasm=base64",
+        "dev": "esbuild kestrel-crypto.bundle=src/crypto.js --bundle --target=esnext --format=esm --outdir=dist --loader:.wasm=base64 --watch",
         "test": "node --test tests",
-        "prepare": "rollup -c"
+        "prepare": "esbuild kestrel-crypto.bundle=src/crypto.js --bundle --target=esnext --format=esm --outdir=dist --loader:.wasm=base64"
     },
     "repository": {
         "type": "git",
@@ -24,6 +24,6 @@
     "author": "Kyle Schreiber <kyle@80x24.net>",
     "license": "MIT",
     "devDependencies": {
-        "rollup": "^4.16.4"
+        "esbuild": "0.20.2"
     }
 }

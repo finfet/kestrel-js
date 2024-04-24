@@ -8,8 +8,9 @@
         "./keyring": "./src/js/keyring.js"
     },
     "scripts": {
-        "build": "rollup -c",
-        "dev": "rollup -c -w",
+        "build": "esbuild app.bundle=src/js/index.js worker.bundle=src/js/worker.js --format=iife --target=esnext --bundle --outdir=dist --outbase=src/js --loader:.js=jsx --jsx=automatic --define:process.env.NODE_ENV=\\\"development\\\"",
+        "dev": "esbuild app.bundle=src/js/index.js worker.bundle=src/js/worker.js --format=iife --target=esnext --bundle --outdir=dist --outbase=src/js --loader:.js=jsx --jsx=automatic --define:process.env.NODE_ENV=\\\"development\\\" --watch",
+        "prod": "esbuild app.bundle=src/js/index.js worker.bundle=src/js/worker.js --format=iife --target=esnext --bundle --outdir=dist --outbase=src/js --loader:.js=jsx --jsx=automatic --define:process.env.NODE_ENV=\\\"production\\\"",
         "test": "node --test tests",
         "copy": "node copy.js"
     },
@@ -31,11 +32,6 @@
         "react-dom": "^18.2.0"
     },
     "devDependencies": {
-        "@babel/preset-react": "^7.24.1",
-        "@rollup/plugin-babel": "^6.0.4",
-        "@rollup/plugin-commonjs": "^25.0.7",
-        "@rollup/plugin-node-resolve": "^15.2.3",
-        "@rollup/plugin-replace": "^5.0.5",
-        "rollup": "^4.16.4"
+        "esbuild": "0.20.2"
     }
 }

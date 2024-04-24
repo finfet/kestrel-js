@@ -65,7 +65,7 @@ function sortContacts(a, b) {
 }
 
 function validContactData(contacts) {
-    if (!contacts instanceof Array) {
+    if (!(contacts instanceof Array)) {
         return false;
     }
     for (let i = 0; i < contacts.length; i++) {
