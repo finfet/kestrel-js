@@ -98,7 +98,7 @@ export default function App() {
     }, []);
 
     useEffect(() => {
-        const worker = new Worker("worker.bundle.js", { type: "module" });
+        const worker = new Worker("worker.bundle.js");
         worker.onmessage = e => {
             let msg = e.data;
             dispatch({ action: "recv", msg: msg });

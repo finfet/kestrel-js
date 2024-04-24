@@ -603,16 +603,13 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
     const changePassDisabled = hasError || showSpinner || showDone;
     const inputDisabled = showSpinner || showDone;
 
-    const validContacts = contacts.map(contact => {
-        if (contact.privateKey != "") {
+    const validContacts = contacts.filter(contact => contact.privateKey != "")
+        .map(contact => {
             return {
                 display: contact.name,
                 value: contact.name
             };
-        }
-
-        return contact;
-    }).filter(contact => contact.privateKey != "");
+        });
 
     const blankContact = [{ display: "Select Key", value: "" }];
     const contactNames = blankContact.concat(validContacts);

@@ -1,4 +1,3 @@
-import { createFilter } from "@rollup/pluginutils";
 import { readFile } from "node:fs/promises";
 
 // Will make any included data available as a base64 string
@@ -18,21 +17,40 @@ import { readFile } from "node:fs/promises";
 //     },
 //     plugins: [
 //         inline({
-//             include: ["**/*.txt"], exclude: ["**/exclude-me.txt"]
+//             extension: [".txt"]
 //         })
 //     ]
 // }
 
 export default function inline(options = {}) {
-    if (!options.include) {
-        throw new Error("Include option is required");
+    if (!options.extension) {
+        throw new Error("Extension option is required");
     }
 
-    const filter = createFilter(options.include, options.exclude);
     return {
         name: "inline",
         async transform(data, id) {
-            if (!filter(id)) {
+            let extensions = [];
+            if (typeof options.extension == "string") {
+                extensions = [options.extension];
+            } else {
+                extensions = [...options.extension];
+            }
+
+            let found = false;
+            for (const extension of extensions) {
+                let idx = id.indexOf(".");
+                if (idx == -1) {
+                    return null;
+                }
+                const ext = id.slice(idx);
+                if (ext == extension) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
                 return null;
             }
 

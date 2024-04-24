@@ -9,7 +9,7 @@ export default {
     },
     plugins: [
         inline({
-            include: ["**/*.wasm"]
+            extension: [".wasm"]
         })
     ]
 }

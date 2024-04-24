@@ -8,7 +8,7 @@ export default [
         input: "src/js/index.js",
         output: {
             file: "dist/app.bundle.js",
-            format: "es",
+            format: "iife",
             sourcemap: true
         },
         plugins: [
@@ -31,7 +31,7 @@ export default [
         input: "src/js/worker.js",
         output: {
             file: "dist/worker.bundle.js",
-            format: "es",
+            format: "iife",
             sourcemap: true
         },
         plugins: [
