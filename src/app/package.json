@@ -8,9 +8,9 @@
         "./keyring": "./src/js/keyring.js"
     },
     "scripts": {
-        "build": "esbuild app.bundle=src/js/index.js worker.bundle=src/js/worker.js --format=iife --target=esnext --bundle --outdir=dist --outbase=src/js --loader:.js=jsx --jsx=automatic --define:process.env.NODE_ENV=\\\"development\\\"",
-        "dev": "esbuild app.bundle=src/js/index.js worker.bundle=src/js/worker.js --format=iife --target=esnext --bundle --outdir=dist --outbase=src/js --loader:.js=jsx --jsx=automatic --define:process.env.NODE_ENV=\\\"development\\\" --watch",
-        "prod": "esbuild app.bundle=src/js/index.js worker.bundle=src/js/worker.js --format=iife --target=esnext --bundle --outdir=dist --outbase=src/js --loader:.js=jsx --jsx=automatic --define:process.env.NODE_ENV=\\\"production\\\"",
+        "build": "node build.js --dev",
+        "dev": "node build.js --dev --watch",
+        "prod": "node build.js --prod",
         "test": "node --test tests",
         "copy": "node copy.js"
     },

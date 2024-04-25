@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { toUtf8Bytes } from "kestrel-crypto/utils";
 
 import { workerMsgActions } from "./state.js";
-import { ResultInfo, MessageInfo, ANIMATION_DURATION } from "./common.js";
+import { ResultInfo, MessageInfo, ANIMATION_DURATION, SelectBox } from "./common.js";
 
 export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, reloadWorker }) {
     const [anim, setAnim] = useState({ start: false, met: false });
@@ -117,10 +117,73 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
     );
 }
 
-export function KeyEncryptPage() {
+export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEncryptLoading, reloadWorker }) {
+    const [recipientName, setRecipientName] = useState("");
+    const [anim, setAnim] = useState({ start: false, met: false });
+    const [resultRequested, setResultRequested] = useState(false);
+
+    const [validationError, setValidationError] = useState(false);
+    const [hasError, setHasError] = useState(false);
+    const [errorMsg, setErrorMsg] = useState("");
+
+    const showError = validationError || hasError;
+    const showSpinner = keyEncryptLoading || (anim.start && !anim.met);
+    const encryptDisabled = hasError || validationError || showSpinner || resultRequested;
+    const inputDisabled = showSpinner || resultRequested;
+
+    const validRecipients = contacts.filter(contact => contact.publicKey != "")
+        .map(contact => {
+            return {
+                display: contact.name,
+                value: contact.name
+            };
+        });
+    const blankContact = [{ display: "Select Key", value: "" }];
+    const recipientNames = blankContact.concat(validRecipients);
+
+    function recipientNameChange(name) {
+        setValidationError(false);
+        setHasError(false);
+        setRecipientName(name);
+    }
+
+    function inputFocus(_event) {
+        setHasError(false);
+        setValidationError(false);
+    }
+
+    function encryptClick(event) {
+        event.preventDefault();
+        if (recipientName == "") {
+            setValidationError(true);
+            setErrorMsg("Please select a recipient");
+            return;
+        }
+
+        setAnim({ start: true, met: false });
+        setTimeout(() => {
+            setAnim({ start: false, met: true });
+        }, ANIMATION_DURATION);
+
+        console.log("encrypting with key...");
+        setResultRequested(true);
+    }
+
     return (
         <div>
             <h4>Encrypt with Key</h4>
+            <form>
+            <div className="form-group pt-3">
+                <label htmlFor="select-recipient">To</label>
+                <SelectBox options={recipientNames} onChange={recipientNameChange} id="select-recipient" disabled={inputDisabled} autoFocus={true} onFocus={inputFocus} />
+            </div>
+            <MessageInfo showMsg={showError} msg={errorMsg} msgType="error" />
+            <div className="row-container pt-3">
+                <div>
+                    <button type="submit" onClick={encryptClick} disabled={encryptDisabled}>Encrypt</button>
+                </div>
+            </div>
+            </form>
         </div>
     );
 }

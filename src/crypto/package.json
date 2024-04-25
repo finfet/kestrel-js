@@ -9,10 +9,10 @@
         "./utils": "./src/utils.js"
     },
     "scripts": {
-        "build": "esbuild kestrel-crypto.bundle=src/crypto.js --bundle --target=esnext --format=esm --outdir=dist --loader:.wasm=base64",
-        "dev": "esbuild kestrel-crypto.bundle=src/crypto.js --bundle --target=esnext --format=esm --outdir=dist --loader:.wasm=base64 --watch",
+        "build": "node build.js",
+        "dev": "node build.js --watch",
         "test": "node --test tests",
-        "prepare": "esbuild kestrel-crypto.bundle=src/crypto.js --bundle --target=esnext --format=esm --outdir=dist --loader:.wasm=base64"
+        "prepare": "node build.js"
     },
     "repository": {
         "type": "git",

@@ -563,7 +563,8 @@ export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, 
                 <textarea id="private-key" name="private-key"
                     rows="6" value={privateKey}
                     onChange={privateKeyChange} disabled={inputDisabled}
-                    onFocus={inputFocus} />
+                    onFocus={inputFocus}
+                    autoFocus />
             </div>
             <div className="form-group pt-3">
                 <label htmlFor="password">Password</label>
@@ -723,7 +724,7 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
             <form>
             <div className="form-group pt-3">
                 <label htmlFor="select-contact">Private Key</label>
-                <SelectBox options={contactNames} onChange={contactNameChange} id="select-key" disabled={inputDisabled} />
+                <SelectBox options={contactNames} onChange={contactNameChange} id="select-contact" disabled={inputDisabled} autoFocus={true} onFocus={inputFocus} />
             </div>
             <div className="form-group pt-3">
                 <label htmlFor="current-password">Current Password</label>

@@ -1,6 +1,8 @@
 export const workerMsgActions = {
     passEncrypt: "pass_encrypt",
     passDecrypt: "pass_decrypt",
+    keyEncrypt: "key_encrypt",
+    keyDecrypt: "key_decrypt",
     generateKey: "generate_key",
     extractKey: "extract_key",
     changePass: "change_pass",
@@ -53,6 +55,10 @@ export const initialState = {
     passEncryptLoading: false,
     passDecryptResult: null,
     passDecryptLoading: false,
+    keyEncryptResult: null,
+    keyEncryptLoading: false,
+    keyDecryptResult: null,
+    keyDecryptLoading: false,
     generateKeyResult: null,
     generateKeyLoading: false,
     extractKeyResult: null,
@@ -75,6 +81,20 @@ export function reducer(state, action) {
             hasError: null,
             passDecryptResult: null,
             passDecryptLoading: true
+        };
+    } else if (action.action == "send" && action.msg.action == workerMsgActions.keyEncrypt) {
+        return {
+            ...state,
+            hasError: null,
+            keyEncryptResult: null,
+            keyEncryptLoading: true
+        };
+    } else if (action.action == "send" && action.msg.action == workerMsgActions.keyDecrypt) {
+        return {
+            ...state,
+            hasError: null,
+            keyDecryptResult: null,
+            keyDecryptLoading: true
         };
     } else if (action.action == "send" && action.msg.action == workerMsgActions.generateKey) {
         return {
@@ -108,6 +128,18 @@ export function reducer(state, action) {
             ...state,
             passDecryptResult: action.msg.result,
             passDecryptLoading: false
+        };
+    } else if (action.action == "recv" && action.msg.action == workerMsgActions.keyEncrypt) {
+        return {
+            ...state,
+            keyEncryptResult: action.msg.result,
+            keyEncryptLoading: false
+        };
+    } else if (action.action == "recv" && action.msg.action == workerMsgActions.keyDecrypt) {
+        return {
+            ...state,
+            keyDecryptResult: action.msg.result,
+            keyDecryptLoading: false
         };
     } else if (action.action == "recv" && action.msg.action == workerMsgActions.generateKey) {
         return {

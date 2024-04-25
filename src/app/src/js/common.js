@@ -125,7 +125,7 @@ export function ResultInfo({ showSpinner, resultShown, result, doneClick }) {
     return (<></>);
 }
 
-export function SelectBox({ options, onChange, id, disabled }) {
+export function SelectBox({ options, onChange, id, disabled, autoFocus, onFocus }) {
     const optionValues = options.map(option => (
         <option key={option.value} value={option.value}>
             {option.display}
@@ -133,7 +133,7 @@ export function SelectBox({ options, onChange, id, disabled }) {
     ));
 
     return (
-        <select className="pt-1" id={id} name={id} onChange={e => onChange(e.target.value)} disabled={disabled}>
+        <select className="pt-1" id={id} name={id} onChange={e => onChange(e.target.value)} disabled={disabled} autoFocus={autoFocus} onFocus={onFocus}>
             {optionValues}
         </select>
     );

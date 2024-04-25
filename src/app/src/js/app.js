@@ -293,7 +293,15 @@ export default function App() {
 
     if (state.appNavState == appNavStates.encrypt) {
         if (state.encryptNavState == encryptNavStates.key) {
-            selectedPage = (<KeyEncryptPage />);
+            selectedPage = (
+                <KeyEncryptPage
+                    sendMessage={sendMessage}
+                    contacts={state.contacts}
+                    keyEncryptResult={state.keyEncryptResult}
+                    keyEncryptLoading={state.keyEncryptLoading}
+                    reloadWorker={reloadWorker}
+                />
+            );
         } else if (state.encryptNavState == encryptNavStates.pass) {
             selectedPage = (
                 <PassEncryptPage

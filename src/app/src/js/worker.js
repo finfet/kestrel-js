@@ -1,9 +1,12 @@
 import { Crypto } from "kestrel-crypto";
 import { lockPrivateKey, unlockPrivateKey, encodePublicKey } from "./keyring.js";
+import { toUtf8Bytes } from "kestrel-crypto/utils";
 
 const workerMsgActions = {
     passEncrypt: "pass_encrypt",
     passDecrypt: "pass_decrypt",
+    keyEncrypt: "key_encrypt",
+    keyDecrypt: "key_decrypt",
     generateKey: "generate_key",
     extractKey: "extract_key",
     changePass: "change_pass"
@@ -18,6 +21,12 @@ self.onmessage = (e) => {
                 break;
             case workerMsgActions.passDecrypt:
                 passDecrypt(msg.args[0], msg.args[1]);
+                break;
+            case workerMsgActions.keyEncrypt:
+                keyEncrypt();
+                break;
+            case workerMsgActions.keyDecrypt:
+                keyDecrypt();
                 break;
             case workerMsgActions.generateKey:
                 generateKey(msg.args[0]);
@@ -74,6 +83,50 @@ async function passDecrypt(inputFile, password) {
         const message = {
             action: workerMsgActions.passDecrypt,
             result: { exception: { name: err.name, message: err.message } }
+        };
+        self.postMessage(message);
+    }
+}
+
+async function keyEncrypt(inputFile, b64SenderPrivate, senderPass, b64RecipientPublic) {
+    const crypto = await Crypto.createInstance();
+    // const filename = stripExtension(inputFile.name);
+    const filename = "hello.txt.ktl";
+    try {
+        const ciperhtext = toUtf8Bytes("ciphertext.");
+        const blob = new Blob([ciphertext], { type: "application/octet-stream" });
+        const url = URL.createObjectURL(blob);
+        const message = {
+            action: workerMsgActions.keyEncrypt,
+            result: { url: url, filename: filename }
+        };
+        self.postMessage(message);
+    } catch (err) {
+        const message = {
+            action: workerMsgActions.keyEncrypt,
+            result: { exception: { name: err.name, message: err.message } }
+        };
+        self.postMessage(message);
+    }
+}
+
+async function keyDecrypt(inputFile, b64RecipientPrivate, recipientPass) {
+    const crypto = await Crypto.createInstance();
+    // const filename = stripExtension(inputFile.name);
+    const filename = "hello.txt";
+    try {
+        const plaintext = toUtf8Bytes("plaintext.");
+        const blob = new Blob([ciphertext], { type: "application/octet-stream" });
+        const url = URL.createObjectURL(blob);
+        const message = {
+            action: workerMsgActions.keyDecrypt,
+            result: { url: url, filename: filename }
+        };
+        self.postMessage(message);
+    } catch (err) {
+        const message = {
+            action: workerMsgActions.keyDecrypt,
+            result: { exception: { name: err.name, message: err.message }}
         };
         self.postMessage(message);
     }
