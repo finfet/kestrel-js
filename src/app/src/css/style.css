@@ -354,7 +354,7 @@ button.link-button:hover:enabled .icon.icon-back {
 }
 
 .icon.icon-delete {
-    color: #900000;
+    color: #dc3545;
 }
 
 button:hover:enabled .icon.icon-delete {

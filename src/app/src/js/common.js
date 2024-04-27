@@ -73,7 +73,7 @@ export function MessageInfo({ showMsg, msg, msgType }) {
     }
 }
 
-export function ResultDone({ showSpinner, showDone, doneClick, backClick }) {
+export function ResultDone({ showSpinner, resultShown, doneClick, backClick }) {
     if (showSpinner) {
         return (
             <div className="pt-2">
@@ -82,7 +82,7 @@ export function ResultDone({ showSpinner, showDone, doneClick, backClick }) {
         );
     }
 
-    if (showDone) {
+    if (resultShown) {
         return (
             <div>
                 <button onClick={doneClick}>Done</button>

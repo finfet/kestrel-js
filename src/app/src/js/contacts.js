@@ -62,8 +62,8 @@ function BackButton({ backClick }) {
 
 export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading, contacts, addContact, backClick }) {
     const [anim, setAnim] = useState({ start: false, met: false });
-    const [showDone, setShowDone] = useState(false);
-    const [validationError, setValidationError] = useState(false);
+    const [resultShown, setResultShown] = useState(false);
+    const [hasError, setHasError] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
 
     const [success, setSuccess] = useState(false);
@@ -74,13 +74,13 @@ export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading,
     const [confirmPassword, setConfirmPassword] = useState("");
 
     const showSpinner = generateKeyLoading || (anim.start && !anim.met);
-    const showError = validationError && !success;
-    const showSuccess = success && showDone && !showSpinner && !validationError;
-    const inputDisabled = showSpinner || showDone;
-    const generateDisabled = validationError || showSpinner || showDone;
+    const showError = hasError && !success && !showSpinner;
+    const showSuccess = success && resultShown && !showSpinner;
+    const inputDisabled = showSpinner || resultShown;
+    const generateDisabled =  showSpinner || resultShown;
 
     useEffect(() => {
-        if (generateKeyResult && showDone) {
+        if (generateKeyResult && resultShown) {
             const privateKey = generateKeyResult.privateKey;
             const publicKey = generateKeyResult.publicKey;
             addContact({
@@ -89,27 +89,27 @@ export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading,
                 privateKey: privateKey,
             });
         }
-    }, [generateKeyResult, showDone]);
+    }, [generateKeyResult, resultShown]);
 
     function nameChange(event) {
-        setValidationError(false);
+        setHasError(false);
         setName(event.target.value);
     }
 
     function passwordChange(event) {
-        setValidationError(false);
+        setHasError(false);
         setPassword(event.target.value);
     }
 
     function confirmPasswordChange(event) {
-        setValidationError(false);
+        setHasError(false);
         setConfirmPassword(event.target.value);
     }
 
     function generateClick(event) {
         event.preventDefault();
         if (name.length < 1) {
-            setValidationError(true);
+            setHasError(true);
             setErrorMsg("Please enter a name");
             return;
         }
@@ -121,13 +121,13 @@ export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading,
         }
 
         if (nameExists(name, contacts)) {
-            setValidationError(true);
+            setHasError(true);
             setErrorMsg("Contact name already exists");
             return;
         }
 
         if (password != confirmPassword) {
-            setValidationError(true);
+            setHasError(true);
             setErrorMsg("Passwords do not match");
             return;
         }
@@ -137,8 +137,9 @@ export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading,
             setAnim({ start: false, met: true });
         }, ANIMATION_DURATION);
 
+        setHasError(false);
         sendMessage(workerMsgActions.generateKey, [toUtf8Bytes(password)]);
-        setShowDone(true);
+        setResultShown(true);
         setSuccess(true);
         setSuccessMsg("Key generated");
     }
@@ -169,7 +170,7 @@ export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading,
                 <div>
                     <button type="submit" onClick={generateClick} disabled={generateDisabled}>Generate</button>
                 </div>
-                <ResultDone showSpinner={showSpinner} showDone={showDone} doneClick={backClick} backClick={backClick} />
+                <ResultDone showSpinner={showSpinner} resultShown={resultShown} doneClick={backClick} backClick={backClick} />
             </div>
             </form>
         </div>
@@ -312,7 +313,7 @@ export function EditKeyPage({ contacts, contact, editContact, backClick }) {
     const [success, setSuccess] = useState(false);
     const [successMsg, setSuccessMsg] = useState("");
 
-    const editDisabled = hasError || contactEdited;
+    const editDisabled = contactEdited;
 
     function nameChange(event) {
         setContactEdited(false);
@@ -385,7 +386,7 @@ export function EditKeyPage({ contacts, contact, editContact, backClick }) {
             <form>
             <div className="form-group pt-3">
                 <label htmlFor="name">Name</label>
-                <input type="text" id="name" name="name" value={name} onChange={nameChange} disabled={contactEdited} />
+                <input type="text" id="name" name="name" value={name} onChange={nameChange} disabled={contactEdited} autoFocus />
             </div>
             <div className="form-group pt-3">
                 <label htmlFor="public-key">Public Key</label>
@@ -479,51 +480,43 @@ export function DeleteKeyPage({ contact, deleteContact, backClick }) {
 
 export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, backClick }) {
     const [anim, setAnim] = useState({ start: false, met: false });
-    const [showDone, setShowDone] = useState(false);
+    const [resultShown, setResultShown] = useState(false);
     const [privateKey, setPrivateKey] = useState("");
     const [password, setPassword] = useState("");
     const [hasError, setHasError] = useState(false);
-    const [validationError, setValidationError] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
     const [success, setSuccess] = useState(false);
     const [successMsg, setSuccessMsg] = useState("");
 
-    const showError = validationError || hasError;
-
     const showSpinner = extractKeyLoading || (anim.start && !anim.met);
-    const extractDisabled = hasError || showSpinner || showDone;
-    const inputDisabled = showSpinner || showDone;
+    const showError =  hasError && !success && !showSpinner;
+    const extractDisabled = showSpinner || resultShown;
+    const inputDisabled = showSpinner || resultShown;
 
     useEffect(() => {
         if (extractKeyResult && extractKeyResult.exception) {
             let ex = extractKeyResult.exception;
             setHasError(true);
             setSuccess(false);
-            setShowDone(false);
+            setResultShown(false);
             if (ex.name == "ChaPolyDecryptError") {
                 setErrorMsg("Decrypt Failed. Check password used.");
             } else {
                 setErrorMsg(ex.message);
             }
-        } else if (extractKeyResult && showDone) {
+        } else if (extractKeyResult && resultShown) {
             setSuccess(true);
             setSuccessMsg(extractKeyResult.publicKey);
         }
-    }, [extractKeyResult, showDone]);
-
-    function inputFocus(_event) {
-        setHasError(false);
-    }
+    }, [extractKeyResult, resultShown]);
 
     function privateKeyChange(event) {
-        setValidationError(false);
         setHasError(false);
         setSuccess(false);
         setPrivateKey(event.target.value);
     }
 
     function passwordChange(event) {
-        setValidationError(false);
         setHasError(false);
         setSuccess(false);
         setPassword(event.target.value);
@@ -533,13 +526,13 @@ export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, 
         event.preventDefault();
         const cleanedPrivKey = privateKey.replaceAll("\n", "").replaceAll(" ", "");
         if (cleanedPrivKey.length < 1) {
-            setValidationError(true);
+            setHasError(true);
             setErrorMsg("Please enter a private key");
             return;
         }
 
         if (!validPrivateKey(cleanedPrivKey)) {
-            setValidationError(true);
+            setHasError(true);
             setErrorMsg("Invalid private key");
             return;
         }
@@ -550,7 +543,7 @@ export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, 
         }, ANIMATION_DURATION);
 
         sendMessage(workerMsgActions.extractKey, [cleanedPrivKey, toUtf8Bytes(password)]);
-        setShowDone(true);
+        setResultShown(true);
     }
 
     return (
@@ -563,15 +556,13 @@ export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, 
                 <textarea id="private-key" name="private-key"
                     rows="6" value={privateKey}
                     onChange={privateKeyChange} disabled={inputDisabled}
-                    onFocus={inputFocus}
                     autoFocus />
             </div>
             <div className="form-group pt-3">
                 <label htmlFor="password">Password</label>
                 <input type="password" id="password"
                     name="password" value={password}
-                    onChange={passwordChange} disabled={inputDisabled}
-                    onFocus={inputFocus} />
+                    onChange={passwordChange} disabled={inputDisabled} />
             </div>
             { success ? (
                 <div className="pt-3">
@@ -593,7 +584,7 @@ export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, 
                 <div>
                     <button type="submit" onClick={extractClick} disabled={extractDisabled}>Extract</button>
                 </div>
-                <ResultDone showSpinner={showSpinner} showDone={showDone} doneClick={backClick} backClick={backClick} />
+                <ResultDone showSpinner={showSpinner} resultShown={resultShown} doneClick={backClick} backClick={backClick} />
             </div>
             </form>
         </div>
@@ -607,17 +598,16 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
     const [confirmPass, setConfirmPass] = useState("");
 
     const [anim, setAnim] = useState({ start: false, met: false });
-    const [showDone, setShowDone] = useState(false);
-    const [validationError, setValidationError] = useState(false);
+    const [resultShown, setResultShown] = useState(false);
     const [hasError, setHasError] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
     const [success, setSuccess] = useState(false);
     const [successMsg, setSuccessMsg] = useState("");
 
-    const showError = validationError || hasError;
     const showSpinner = changePassLoading || (anim.start && !anim.met);
-    const changePassDisabled = hasError || showSpinner || showDone;
-    const inputDisabled = showSpinner || showDone;
+    const showError = hasError && !success && !showSpinner;
+    const changePassDisabled = showSpinner || resultShown;
+    const inputDisabled = showSpinner || resultShown;
 
     const validContacts = contacts.filter(contact => contact.privateKey != "")
         .map(contact => {
@@ -641,55 +631,47 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
             } else {
                 setErrorMsg(ex.message);
             }
-        } else if (changePassResult && showDone) {
+        } else if (changePassResult && resultShown) {
             setSuccess(true);
             setSuccessMsg("Contact updated");
             changeContactPass(changePassResult.privateKey, contactName);
         }
-    }, [changePassResult, showDone]);
+    }, [changePassResult, resultShown]);
 
     function contactNameChange(name) {
-        setValidationError(false);
         setHasError(false);
         setSuccess(false);
         setContactName(name);
     }
 
     function currentPassChange(event) {
-        setValidationError(false);
         setHasError(false);
         setSuccess(false);
         setCurrentPass(event.target.value);
     }
 
     function updatedPassChange(event) {
-        setValidationError(false);
         setHasError(false);
         setSuccess(false);
         setUpdatedPass(event.target.value);
     }
 
     function confirmPassChange(event) {
-        setValidationError(false);
         setHasError(false);
         setSuccess(false);
         setConfirmPass(event.target.value);
     }
 
-    function inputFocus(_event) {
-        setHasError(false);
-    }
-
     function changePassClick(event) {
         event.preventDefault();
         if (contactName == "") {
-            setValidationError(true);
+            setHasError(true);
             setErrorMsg("Please select a key");
             return;
         }
 
         if (updatedPass != confirmPass) {
-            setValidationError(true);
+            setHasError(true);
             setErrorMsg("Passwords do not match");
             return;
         }
@@ -703,7 +685,7 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
         }
 
         if (!privateKey) {
-            setValidationError(true);
+            setHasError(true);
             setErrorMsg("Private key not found");
             return;
         }
@@ -714,7 +696,7 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
         }, ANIMATION_DURATION);
 
         sendMessage(workerMsgActions.changePass, [privateKey, toUtf8Bytes(currentPass), toUtf8Bytes(updatedPass)]);
-        setShowDone(true);
+        setResultShown(true);
     }
 
     return (
@@ -724,28 +706,25 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
             <form>
             <div className="form-group pt-3">
                 <label htmlFor="select-contact">Private Key</label>
-                <SelectBox options={contactNames} onChange={contactNameChange} id="select-contact" disabled={inputDisabled} autoFocus={true} onFocus={inputFocus} />
+                <SelectBox options={contactNames} onChange={contactNameChange} id="select-contact" disabled={inputDisabled} autoFocus={true} />
             </div>
             <div className="form-group pt-3">
                 <label htmlFor="current-password">Current Password</label>
                 <input type="password" id="current-password"
                     name="current-password" value={currentPass}
-                    onChange={currentPassChange} disabled={inputDisabled}
-                    onFocus={inputFocus} />
+                    onChange={currentPassChange} disabled={inputDisabled} />
             </div>
             <div className="form-group pt-3">
                 <label htmlFor="updated-password">New Password</label>
                 <input type="password" id="updated-password"
                     name="updated-password" value={updatedPass}
-                    onChange={updatedPassChange} disabled={inputDisabled}
-                    onFocus={inputFocus} />
+                    onChange={updatedPassChange} disabled={inputDisabled} />
             </div>
             <div className="form-group pt-3">
                 <label htmlFor="confirm-password">Confirm Password</label>
                 <input type="password" id="confirm-password"
                     name="confirm-password" value={confirmPass}
-                    onChange={confirmPassChange} disabled={inputDisabled}
-                    onFocus={inputFocus} />
+                    onChange={confirmPassChange} disabled={inputDisabled} />
             </div>
             { showError ? (
                 <MessageInfo showMsg={showError} msg={errorMsg} msgType="error" />
@@ -756,7 +735,7 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
                 <div>
                     <button type="submit" onClick={changePassClick} disabled={changePassDisabled}>Save</button>
                 </div>
-                <ResultDone showSpinner={showSpinner} showDone={showDone} doneClick={backClick} backClick={backClick} />
+                <ResultDone showSpinner={showSpinner} resultShown={resultShown} doneClick={backClick} backClick={backClick} />
             </div>
             </form>
         </div>

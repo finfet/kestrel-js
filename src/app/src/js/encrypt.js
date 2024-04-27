@@ -13,46 +13,46 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
     const fileInputField = useRef(null);
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [validationError, setValidationError] = useState(false);
+    const [hasError, setHasError] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
 
     const showSpinner = passEncryptLoading || (anim.start && !anim.met);
     const encryptDisabled = showSpinner || resultShown;
-    const showError = validationError;
+    const showError =  hasError && !showSpinner;
     const s100MiB = 100 * (1024 * 1024);
     const s1GiB = 1024 * (1024 * 1024);
     const maxFileSize = s1GiB;
 
     function fileChange(event) {
         const file = event.target.files[0];
-        setValidationError(false);
+        setHasError(false);
         setFileSize(file.size);
         setPlaintextFile(file);
     }
 
     function passwordChange(event) {
-        setValidationError(false);
+        setHasError(false);
         setPassword(event.target.value);
     }
 
     function confirmPasswordChange(event) {
-        setValidationError(false);
+        setHasError(false);
         setConfirmPassword(event.target.value);
     }
 
     function encryptClick() {
         if (!plaintextFile) {
-            setValidationError(true);
+            setHasError(true);
             setErrorMsg("Please select a file");
             return;
         }
         if (fileSize > maxFileSize) {
-            setValidationError(true);
+            setHasError(true);
             setErrorMsg("File is too large. Maximum is 1GB");
             return;
         }
         if (password != confirmPassword) {
-            setValidationError(true);
+            setHasError(true);
             setErrorMsg("Passwords do not match");
             return;
         }
@@ -77,7 +77,7 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
         }
         setPassword("");
         setConfirmPassword("");
-        setValidationError(false);
+        setHasError(false);
         setErrorMsg("");
         if (fileSize > s100MiB) {
             reloadWorker();
@@ -120,16 +120,14 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
 export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEncryptLoading, reloadWorker }) {
     const [recipientName, setRecipientName] = useState("");
     const [anim, setAnim] = useState({ start: false, met: false });
-    const [resultRequested, setResultRequested] = useState(false);
+    const [resultShown, setResultShown] = useState(false);
 
-    const [validationError, setValidationError] = useState(false);
     const [hasError, setHasError] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
 
-    const showError = validationError || hasError;
+    const showError =  hasError && !showSpinner;
     const showSpinner = keyEncryptLoading || (anim.start && !anim.met);
-    const encryptDisabled = hasError || validationError || showSpinner || resultRequested;
-    const inputDisabled = showSpinner || resultRequested;
+    const encryptDisabled = showSpinner || resultShown;
 
     const validRecipients = contacts.filter(contact => contact.publicKey != "")
         .map(contact => {
@@ -142,20 +140,14 @@ export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEnc
     const recipientNames = blankContact.concat(validRecipients);
 
     function recipientNameChange(name) {
-        setValidationError(false);
         setHasError(false);
         setRecipientName(name);
-    }
-
-    function inputFocus(_event) {
-        setHasError(false);
-        setValidationError(false);
     }
 
     function encryptClick(event) {
         event.preventDefault();
         if (recipientName == "") {
-            setValidationError(true);
+            setHasError(true);
             setErrorMsg("Please select a recipient");
             return;
         }
@@ -166,7 +158,7 @@ export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEnc
         }, ANIMATION_DURATION);
 
         console.log("encrypting with key...");
-        setResultRequested(true);
+        setResultShown(true);
     }
 
     return (
@@ -175,7 +167,7 @@ export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEnc
             <form>
             <div className="form-group pt-3">
                 <label htmlFor="select-recipient">To</label>
-                <SelectBox options={recipientNames} onChange={recipientNameChange} id="select-recipient" disabled={inputDisabled} autoFocus={true} onFocus={inputFocus} />
+                <SelectBox options={recipientNames} onChange={recipientNameChange} id="select-recipient" autoFocus />
             </div>
             <MessageInfo showMsg={showError} msg={errorMsg} msgType="error" />
             <div className="row-container pt-3">

@@ -10,7 +10,6 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
 
     const fileInputField = useRef(null);
     const [hasError, setHasError] = useState(false);
-    const [validationError, setValidationError] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
 
     const [fileSize, setFileSize] = useState(0);
@@ -18,8 +17,8 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
     const [password, setPassword] = useState("");
 
     const showSpinner = passDecryptLoading || (anim.start && !anim.met);
-    const decryptDisabled = hasError || showSpinner || resultShown;
-    const showError = validationError || hasError;
+    const decryptDisabled = showSpinner || resultShown;
+    const showError = hasError && !showSpinner;
 
     // 1GiB + file format overhead (32 bytes per 64k + 36 byte header)
     const s100MiB = 100 * (1024 * 1024);
@@ -40,39 +39,34 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
         }
     }, [passDecryptResult]);
 
-    function inputFocus(_event) {
-        setHasError(false);
-    }
-
     function fileChange(event) {
         const file = event.target.files[0];
-        setValidationError(false);
+        setHasError(false);
         setFileSize(file.size);
         setCiphertextFile(file);
     }
 
     function passwordChange(event) {
-        setValidationError(false);
+        setHasError(false);
         setPassword(event.target.value);
     }
 
     function decryptClick(event) {
         event.preventDefault();
         if (!ciphertextFile) {
-            setValidationError(true);
+            setHasError(true);
             setErrorMsg("Please select a file");
             return;
         }
 
         if (fileSize > maxFileSize) {
-            setValidationError(true);
+            setHasError(true);
             setErrorMsg("File is too large. Maximum 1GB");
             return;
         }
 
         setAnim({ start: true, met: false });
         setHasError(false);
-        setValidationError(false);
         setResultShown(true);
         setTimeout(() => {
             setAnim({ start: false, met: true });
@@ -93,10 +87,10 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
         }
         setPassword("");
         setHasError(false);
-        setValidationError(false);
         setErrorMsg("");
+        const lastFileSize = fileSize;
         setFileSize(0);
-        if (fileSize > s100MiB) {
+        if (lastFileSize > s100MiB) {
             reloadWorker();
         }
     }
@@ -107,11 +101,11 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
             <form>
             <div className="form-group pt-3">
                 <label htmlFor="ciphertext-file">Select File</label>
-                <input className="file-input" type="file" id="ciphertext-file" name="ciphertext-file" ref={fileInputField} onChange={fileChange} onFocus={inputFocus} />
+                <input className="file-input" type="file" id="ciphertext-file" name="ciphertext-file" ref={fileInputField} onChange={fileChange} />
             </div>
             <div className="form-group pt-3">
                 <label htmlFor="password">Password</label>
-                <input type="password" id="password" name="password" value={password} onChange={passwordChange} onFocus={inputFocus} />
+                <input type="password" id="password" name="password" value={password} onChange={passwordChange} />
             </div>
             <MessageInfo showMsg={showError} msg={errorMsg} msgType="error" />
             <div className="pt-3 row-container">
