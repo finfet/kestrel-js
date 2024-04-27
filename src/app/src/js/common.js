@@ -1,6 +1,24 @@
 
 export const ANIMATION_DURATION = 200;
 
+export function getPrivateKey(contacts, name) {
+    for (const contact of contacts) {
+        if (contact.name == name) {
+            return contact.privateKey;
+        }
+    }
+    return "";
+}
+
+export function getPublicKey(contacts, name) {
+    for (const contact of contacts) {
+        if (contact.name == name) {
+            return contact.publicKey;
+        }
+    }
+    return "";
+}
+
 export function DownloadIcon() {
     return (
         <span className="icon icon-download">
@@ -125,7 +143,7 @@ export function ResultInfo({ showSpinner, resultShown, result, doneClick }) {
     return (<></>);
 }
 
-export function SelectBox({ options, onChange, id, disabled, autoFocus, onFocus }) {
+export function SelectBox({ options, value, onChange, id, disabled, autoFocus, onFocus }) {
     const optionValues = options.map(option => (
         <option key={option.value} value={option.value}>
             {option.display}
@@ -133,7 +151,7 @@ export function SelectBox({ options, onChange, id, disabled, autoFocus, onFocus 
     ));
 
     return (
-        <select className="pt-1" id={id} name={id} onChange={e => onChange(e.target.value)} disabled={disabled} autoFocus={autoFocus} onFocus={onFocus}>
+        <select value={value} className="pt-1" id={id} name={id} onChange={e => onChange(e.target.value)} disabled={disabled} autoFocus={autoFocus} onFocus={onFocus}>
             {optionValues}
         </select>
     );

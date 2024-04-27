@@ -23,10 +23,10 @@ self.onmessage = (e) => {
                 passDecrypt(msg.args[0], msg.args[1]);
                 break;
             case workerMsgActions.keyEncrypt:
-                keyEncrypt();
+                keyEncrypt(msg.args[0], msg.args[1], msg.args[2], msg.args[3]);
                 break;
             case workerMsgActions.keyDecrypt:
-                keyDecrypt();
+                keyDecrypt(msg.args[0], msg.args[1], msg.args[2]);
                 break;
             case workerMsgActions.generateKey:
                 generateKey(msg.args[0]);
@@ -91,9 +91,12 @@ async function passDecrypt(inputFile, password) {
 async function keyEncrypt(inputFile, b64SenderPrivate, senderPass, b64RecipientPublic) {
     const crypto = await Crypto.createInstance();
     // const filename = stripExtension(inputFile.name);
+
+    // TODO: Send back a KeyUnlockError if we can't unlock the key. Only add
+    // the message if the error name is PrivateKeyLength or PrivateKeyFormat
     const filename = "hello.txt.ktl";
     try {
-        const ciperhtext = toUtf8Bytes("ciphertext.");
+        const ciphertext = toUtf8Bytes("ciphertext.");
         const blob = new Blob([ciphertext], { type: "application/octet-stream" });
         const url = URL.createObjectURL(blob);
         const message = {

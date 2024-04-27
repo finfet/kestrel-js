@@ -625,7 +625,7 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
             let ex = changePassResult.exception;
             setHasError(true);
             setSuccess(false);
-            setShowDone(false);
+            setResultShown(false);
             if (ex.name == "ChaPolyDecryptError") {
                 setErrorMsg("Decrypt Failed. Check password used.");
             } else {
@@ -706,7 +706,7 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
             <form>
             <div className="form-group pt-3">
                 <label htmlFor="select-contact">Private Key</label>
-                <SelectBox options={contactNames} onChange={contactNameChange} id="select-contact" disabled={inputDisabled} autoFocus={true} />
+                <SelectBox options={contactNames} value={contactName} onChange={contactNameChange} id="select-contact" disabled={inputDisabled} autoFocus={true} />
             </div>
             <div className="form-group pt-3">
                 <label htmlFor="current-password">Current Password</label>
