@@ -147,14 +147,14 @@ export class Crypto {
      * @param {Uint8Array} plaintext Plaintext to encrypt
      * @param {Uint8Array} password Password
      * @param {Uint8Array} salt 32 byte salt
-     * @param {Number} [file_format=0x20] Password file format version. v1 is 0x20
+     * @param {Number} [fileFormat=0x20] Password file format version. v1 is 0x20
      * @throws EncryptError
      * @returns {Uint8Array} Ciphertext
      */
-    passEncrypt(plaintext, password, salt, file_format = 0x20) {
+    passEncrypt(plaintext, password, salt, fileFormat = 0x20) {
         let ciphertext;
         try {
-            ciphertext = kcrypto.pass_encrypt(plaintext, password, salt, file_format);
+            ciphertext = kcrypto.pass_encrypt(plaintext, password, salt, fileFormat);
         } catch (wasmError) {
             let err = this.getError(wasmError);
             throw err;
@@ -170,10 +170,10 @@ export class Crypto {
      * @throws DecryptError
      * @returns {Uint8Array} Plaintext
      */
-    passDecrypt(ciphertext, password, file_format = 0x20) {
+    passDecrypt(ciphertext, password, fileFormat = 0x20) {
         let plaintext;
         try {
-            plaintext = kcrypto.pass_decrypt(ciphertext, password, file_format);
+            plaintext = kcrypto.pass_decrypt(ciphertext, password, fileFormat);
         } catch (wasmError) {
             let err = this.getError(wasmError);
             throw err;
@@ -185,14 +185,14 @@ export class Crypto {
      * Kestrel encryption using public keys
      * @param {Uint8Array} plaintext Plaintext to encrypt
      * @param {Uint8Array} senderPrivateKey Sender  private key
-     * @param {Uint8Array} recipientPublicKey Recipient publick ey
-     * @param {Uint8Array} [ephemPrivateKey] Optional ephemeral key.
-     * @param {Uint8Array} [payloadKey] Optional payload key
+     * @param {Uint8Array} recipientPublicKey Recipient public key
+     * @param {Uint8Array} [ephemPrivateKey=new Uint8Array(0)] Optional ephemeral key.
+     * @param {Uint8Array} [payloadKey=new Uint8Array(0)] Optional payload key
      * @param {Number} [fileFormat=0x10] Optional key file format version. v1 is 0x10
      * @throws EncryptError
      * @returns {Uint8Array} Ciphertext
      */
-    keyEncrypt(plaintext, senderPrivateKey, recipientPublicKey, ephemPrivateKey, payloadKey, fileFormat = 0x10) {
+    keyEncrypt(plaintext, senderPrivateKey, recipientPublicKey, ephemPrivateKey = new Uint8Array(0), payloadKey = new Uint8Array(0), fileFormat = 0x10) {
         let ciphertext;
         try {
             ciphertext = kcrypto.key_encrypt(plaintext, senderPrivateKey, recipientPublicKey, ephemPrivateKey, payloadKey, fileFormat);
@@ -205,13 +205,13 @@ export class Crypto {
 
     /**
      * Kestrel decryption using public keys
-     * @param {*} ciphertext Ciphertext to decrypt
-     * @param {*} recipientPrivateKey Recipient private key
-     * @param {*} fileFormat Optional key file format version. v1 is 0x10
+     * @param {Uint8Array} ciphertext Ciphertext to decrypt
+     * @param {Uint8Array} recipientPrivateKey Recipient private key
+     * @param {Uint8Array} [fileFormat=0x10] Optional key file format version. v1 is 0x10
      * @throws DecryptError
-     * @returns {Object} Plaintext and sender public key
+     * @returns {Object} Object with properties: plaintext and publicKey
      */
-    keyDecrypt(ciphertext, recipientPrivateKey, fileFormat = 0x20) {
+    keyDecrypt(ciphertext, recipientPrivateKey, fileFormat = 0x10) {
         let plaintext;
         let publicKey;
         try {

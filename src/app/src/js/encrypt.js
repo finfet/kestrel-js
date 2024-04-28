@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toUtf8Bytes } from "kestrel-crypto/utils";
 
 import { workerMsgActions } from "./state.js";
@@ -229,8 +229,6 @@ export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEnc
 
         const b64PrivateKey = getPrivateKey(contacts, senderName);
         const b64PublicKey = getPublicKey(contacts, recipientName);
-
-        console.log(`Encrypting from ${senderName} to ${recipientName}`);
 
         setAnim({ start: true, met: false });
         setHasError(false);

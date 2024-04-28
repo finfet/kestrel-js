@@ -69,6 +69,13 @@ function EncryptInput() {
     this.plaintext = toUtf8Bytes("Be sure to drink your Ovaltine");
 }
 
+function KeyData() {
+    this.alicePrivate = fromHex("46acb4ad2a6ffb9d70245798634ad0d5caf7a9738e5f3b60905dee7a7b973bd5");
+    this.alicePublic = fromHex("3cf3637b4dfdc4596544a936b3983fca09324505f39568d4b8537bc01a92cf6d");
+    this.bobPrivate = fromHex("461299525a53333e8597a2b065703ec751356f8462d2704e630c108037567bd4");
+    this.bobPublic = fromHex("98459724b39e6b9e90b60d214df2887093e224b163714e07e527a4d37edc2d03");
+}
+
 test("passEncrypt", () => {
     const encryptInput = new EncryptInput();
     const expectedHash = fromHex("bef8d086931a2be31875839474b455fb6a9bfa0fbb6669dbeb8a86e51be0c9bd");
@@ -83,4 +90,32 @@ test("passDecrypt", () => {
     const ciphertext = crypto.passEncrypt(encryptInput.plaintext, encryptInput.pass, encryptInput.salt);
     const plaintext = crypto.passDecrypt(ciphertext, encryptInput.pass);
     assert.deepEqual(plaintext, encryptInput.plaintext);
+});
+
+function keyEncryptUtil() {
+    const keyData = new KeyData();
+    const ephemPrivate = fromHex("fdbc28d8f4c2a97013e460836cece7a4bdf59df0cb4b3a185146d13615884f38");
+    const payloadKey = fromHex("a9f9ddef54d0432ec067b75aef26c3db5419ade3b016339743ca1812d89188b2");
+    const plaintext = toUtf8Bytes("Hello, world!");
+    const ciphertext = crypto.keyEncrypt(plaintext, keyData.alicePrivate, keyData.bobPublic, ephemPrivate, payloadKey);
+    return ciphertext;
+}
+
+test("keyEncrypt", () => {
+    const expectedHash = fromHex("3f3b97112e768a8fa7cce7ce90c166b6ea2de51d8868a037dfd57094ea6e77f1");
+    const ciphertext = keyEncryptUtil();
+    const gotHash = crypto.sha256(ciphertext);
+    assert.equal(ciphertext.length, 177);
+    assert.deepEqual(gotHash, expectedHash);
+});
+
+test("keyDecrypt", () => {
+    const expectedPlaintext = toUtf8Bytes("Hello, world!");
+    const keyData = new KeyData();
+    const expectedSender = keyData.alicePublic;
+    const recipient = keyData.bobPrivate;
+    const ciphertext = keyEncryptUtil();
+    const { plaintext, publicKey } = crypto.keyDecrypt(ciphertext, recipient);
+    assert.deepEqual(plaintext, expectedPlaintext);
+    assert.deepEqual(publicKey, expectedSender);
 });

@@ -1,5 +1,5 @@
 import { Crypto } from "kestrel-crypto";
-import { lockPrivateKey, unlockPrivateKey, encodePublicKey } from "./keyring.js";
+import { lockPrivateKey, unlockPrivateKey, encodePublicKey, decodePublicKey } from "./keyring.js";
 import { toUtf8Bytes } from "kestrel-crypto/utils";
 
 const workerMsgActions = {
@@ -88,15 +88,58 @@ async function passDecrypt(inputFile, password) {
     }
 }
 
+function attemptUnlock(crypto, b64PriavateKey, password) {
+    let privateKey = null;
+    try {
+        privateKey = unlockPrivateKey(crypto, b64PriavateKey, password);
+    } catch (err) {
+        if (err.name == "PrivateKeyFormat" || err.name == "PrivateKeyLength") {
+            let ex = new Error(`Could not unlock private key: ${err.message}`);
+            ex.name = "KeyUnlockError";
+            const message = {
+                action: workerMsgActions.keyEncrypt,
+                result: { exception: { name: ex.name, message: ex.message }}
+            };
+            return {
+                privateKey: null,
+                exception: message
+            };
+        } else {
+            let ex = new Error("Could not unlock private key. Check password used.");
+            ex.name = "KeyUnlockError";
+            const message = {
+                action: workerMsgActions.keyEncrypt,
+                result: { exception: { name: ex.message }}
+            };
+            return {
+                privateKey: null,
+                exception: message
+            };
+        }
+    }
+
+    return {
+        privateKey: privateKey,
+        exception: null
+    };
+}
+
 async function keyEncrypt(inputFile, b64SenderPrivate, senderPass, b64RecipientPublic) {
     const crypto = await Crypto.createInstance();
-    // const filename = stripExtension(inputFile.name);
+    const filename = `${inputFile.name}.ktl`;
+    const buffer = await inputFile.arrayBuffer();
+    const plaintext = new Uint8Array(buffer);
 
-    // TODO: Send back a KeyUnlockError if we can't unlock the key. Only add
-    // the message if the error name is PrivateKeyLength or PrivateKeyFormat
-    const filename = "hello.txt.ktl";
+    const unlockAttempt = attemptUnlock(crypto, b64SenderPrivate, senderPass);
+    if (unlockAttempt.exception) {
+        self.postMessage(unlockAttempt.exception);
+        return;
+    }
+    const senderPrivate = unlockAttempt.privateKey;
+
     try {
-        const ciphertext = toUtf8Bytes("ciphertext.");
+        const recipientPublic = decodePublicKey(crypto, b64RecipientPublic);
+        const ciphertext = crypto.keyEncrypt(plaintext, senderPrivate, recipientPublic);
         const blob = new Blob([ciphertext], { type: "application/octet-stream" });
         const url = URL.createObjectURL(blob);
         const message = {
@@ -115,15 +158,25 @@ async function keyEncrypt(inputFile, b64SenderPrivate, senderPass, b64RecipientP
 
 async function keyDecrypt(inputFile, b64RecipientPrivate, recipientPass) {
     const crypto = await Crypto.createInstance();
-    // const filename = stripExtension(inputFile.name);
-    const filename = "hello.txt";
+    const filename = stripExtension(inputFile.name);
+    const buffer = await inputFile.arrayBuffer();
+    const ciphertext = new Uint8Array(buffer);
+
+    const unlockAttempt = attemptUnlock(crypto, b64RecipientPrivate, recipientPass);
+    if (unlockAttempt.exception) {
+        self.postMessage(unlockAttempt.exception);
+        return;
+    }
+
+    const recipientPrivate = unlockAttempt.privateKey;
+
     try {
-        const plaintext = toUtf8Bytes("plaintext.");
-        const blob = new Blob([ciphertext], { type: "application/octet-stream" });
+        const { plaintext, publicKey } = crypto.keyDecrypt(ciphertext, recipientPrivate);
+        const blob = new Blob([plaintext], { type: "application/octet-stream" });
         const url = URL.createObjectURL(blob);
         const message = {
             action: workerMsgActions.keyDecrypt,
-            result: { url: url, filename: filename }
+            result: { url: url, filename: filename, publicKey: publicKey }
         };
         self.postMessage(message);
     } catch (err) {
