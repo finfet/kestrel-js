@@ -147,7 +147,8 @@ export class Crypto {
      * @param {Uint8Array} plaintext Plaintext to encrypt
      * @param {Uint8Array} password Password
      * @param {Uint8Array} salt 32 byte salt
-     * @param {Number} file_format Password file format version. v1 is 0x20
+     * @param {Number} [file_format=0x20] Password file format version. v1 is 0x20
+     * @throws EncryptError
      * @returns {Uint8Array} Ciphertext
      */
     passEncrypt(plaintext, password, salt, file_format = 0x20) {
@@ -165,7 +166,7 @@ export class Crypto {
      * Kestrel decryption using a key derived from a password
      * @param {Uint8Array} ciphertext Ciphertext to decrypt
      * @param {Uint8Array} password Password
-     * @param {Number} file_format Password file format version. v1 is 0x20
+     * @param {Number} [file_format=0x20] Optional password file format version. v1 is 0x20
      * @throws DecryptError
      * @returns {Uint8Array} Plaintext
      */
@@ -178,6 +179,54 @@ export class Crypto {
             throw err;
         }
         return plaintext;
+    }
+
+    /**
+     * Kestrel encryption using public keys
+     * @param {Uint8Array} plaintext Plaintext to encrypt
+     * @param {Uint8Array} senderPrivateKey Sender  private key
+     * @param {Uint8Array} recipientPublicKey Recipient publick ey
+     * @param {Uint8Array} [ephemPrivateKey] Optional ephemeral key.
+     * @param {Uint8Array} [payloadKey] Optional payload key
+     * @param {Number} [fileFormat=0x10] Optional key file format version. v1 is 0x10
+     * @throws EncryptError
+     * @returns {Uint8Array} Ciphertext
+     */
+    keyEncrypt(plaintext, senderPrivateKey, recipientPublicKey, ephemPrivateKey, payloadKey, fileFormat = 0x10) {
+        let ciphertext;
+        try {
+            ciphertext = kcrypto.key_encrypt(plaintext, senderPrivateKey, recipientPublicKey, ephemPrivateKey, payloadKey, fileFormat);
+        } catch (wasmError) {
+            let err = this.getError(wasmError);
+            throw err;
+        }
+        return ciphertext;
+    }
+
+    /**
+     * Kestrel decryption using public keys
+     * @param {*} ciphertext Ciphertext to decrypt
+     * @param {*} recipientPrivateKey Recipient private key
+     * @param {*} fileFormat Optional key file format version. v1 is 0x10
+     * @throws DecryptError
+     * @returns {Object} Plaintext and sender public key
+     */
+    keyDecrypt(ciphertext, recipientPrivateKey, fileFormat = 0x20) {
+        let plaintext;
+        let publicKey;
+        try {
+            const pubKeyBuf = new Uint8Array(32);
+            plaintext = kcrypto.key_decrypt(ciphertext, recipientPrivateKey, fileFormat, pubKeyBuf);
+            publicKey = pubKeyBuf;
+        } catch (wasError) {
+            let err = this.getError(wasmError);
+            throw err;
+        }
+
+        return {
+            plaintext: plaintext,
+            publicKey: publicKey
+        };
     }
 
     getError(wasmError) {

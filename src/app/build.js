@@ -31,6 +31,9 @@ async function build() {
         jsx: "automatic",
         define: {
             "process.env.NODE_ENV": `"${buildType}"`
+        },
+        logOverride: {
+            "empty-import-meta": "silent"
         }
     }
 
