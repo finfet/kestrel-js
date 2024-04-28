@@ -88,16 +88,16 @@ async function passDecrypt(inputFile, password) {
     }
 }
 
-function attemptUnlock(crypto, b64PriavateKey, password) {
+function attemptUnlock(crypto, b64PriavateKey, password, action) {
     let privateKey = null;
     try {
         privateKey = unlockPrivateKey(crypto, b64PriavateKey, password);
     } catch (err) {
         if (err.name == "PrivateKeyFormat" || err.name == "PrivateKeyLength") {
-            let ex = new Error(`Could not unlock private key: ${err.message}`);
+            let ex = new Error(`Failed to unlock key: ${err.message}`);
             ex.name = "KeyUnlockError";
             const message = {
-                action: workerMsgActions.keyEncrypt,
+                action: action,
                 result: { exception: { name: ex.name, message: ex.message }}
             };
             return {
@@ -105,11 +105,11 @@ function attemptUnlock(crypto, b64PriavateKey, password) {
                 exception: message
             };
         } else {
-            let ex = new Error("Could not unlock private key. Check password used.");
+            let ex = new Error("Failed to unlock key. Check password used.");
             ex.name = "KeyUnlockError";
             const message = {
-                action: workerMsgActions.keyEncrypt,
-                result: { exception: { name: ex.message }}
+                action: action,
+                result: { exception: { name: ex.name, message: ex.message }}
             };
             return {
                 privateKey: null,
@@ -130,7 +130,7 @@ async function keyEncrypt(inputFile, b64SenderPrivate, senderPass, b64RecipientP
     const buffer = await inputFile.arrayBuffer();
     const plaintext = new Uint8Array(buffer);
 
-    const unlockAttempt = attemptUnlock(crypto, b64SenderPrivate, senderPass);
+    const unlockAttempt = attemptUnlock(crypto, b64SenderPrivate, senderPass, workerMsgActions.keyEncrypt);
     if (unlockAttempt.exception) {
         self.postMessage(unlockAttempt.exception);
         return;
@@ -162,7 +162,7 @@ async function keyDecrypt(inputFile, b64RecipientPrivate, recipientPass) {
     const buffer = await inputFile.arrayBuffer();
     const ciphertext = new Uint8Array(buffer);
 
-    const unlockAttempt = attemptUnlock(crypto, b64RecipientPrivate, recipientPass);
+    const unlockAttempt = attemptUnlock(crypto, b64RecipientPrivate, recipientPass, workerMsgActions.keyDecrypt);
     if (unlockAttempt.exception) {
         self.postMessage(unlockAttempt.exception);
         return;
@@ -172,11 +172,12 @@ async function keyDecrypt(inputFile, b64RecipientPrivate, recipientPass) {
 
     try {
         const { plaintext, publicKey } = crypto.keyDecrypt(ciphertext, recipientPrivate);
+        const b64SenderPublic = encodePublicKey(crypto, publicKey);
         const blob = new Blob([plaintext], { type: "application/octet-stream" });
         const url = URL.createObjectURL(blob);
         const message = {
             action: workerMsgActions.keyDecrypt,
-            result: { url: url, filename: filename, publicKey: publicKey }
+            result: { url: url, filename: filename, publicKey: b64SenderPublic }
         };
         self.postMessage(message);
     } catch (err) {

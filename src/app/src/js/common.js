@@ -1,5 +1,20 @@
 
 export const ANIMATION_DURATION = 200;
+export const s100MiB = 100 * (1024 * 1024);
+export const s1GiB = 1024 * (1024 * 1024);
+
+export function createNameSelect(contacts, f) {
+    const blankContact = [{ display: "Select Key", value: "" }];
+    const validContacts = contacts.filter(f).map(contact => {
+        return {
+            display: contact.name,
+            value: contact.name
+        };
+    });
+
+    const contactNames = blankContact.concat(validContacts);
+    return contactNames;
+}
 
 export function getPrivateKey(contacts, name) {
     for (const contact of contacts) {
@@ -103,14 +118,14 @@ export function ResultDone({ showSpinner, resultShown, doneClick, backClick }) {
     if (resultShown) {
         return (
             <div>
-                <button onClick={doneClick}>Done</button>
+                <button type="button" onClick={doneClick}>Done</button>
             </div>
         );
     }
 
     return (
         <div>
-            <button onClick={backClick}>Cancel</button>
+            <button type="button" onClick={backClick}>Cancel</button>
         </div>
     );
 }

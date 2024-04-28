@@ -495,14 +495,14 @@ export function ExtractPage({ sendMessage, extractKeyResult, extractKeyLoading, 
 
     useEffect(() => {
         if (extractKeyResult && extractKeyResult.exception) {
-            let ex = extractKeyResult.exception;
+            let err = extractKeyResult.exception;
             setHasError(true);
             setSuccess(false);
             setResultShown(false);
-            if (ex.name == "ChaPolyDecryptError") {
+            if (err.name == "ChaPolyDecryptError") {
                 setErrorMsg("Decrypt Failed. Check password used.");
             } else {
-                setErrorMsg(ex.message);
+                setErrorMsg(err.message);
             }
         } else if (extractKeyResult && resultShown) {
             setSuccess(true);
@@ -622,14 +622,14 @@ export function ChangePassPage({ sendMessage, contacts, changePassResult, change
 
     useEffect(() => {
         if (changePassResult && changePassResult.exception) {
-            let ex = changePassResult.exception;
+            let err = changePassResult.exception;
             setHasError(true);
             setSuccess(false);
             setResultShown(false);
-            if (ex.name == "ChaPolyDecryptError") {
+            if (err.name == "ChaPolyDecryptError") {
                 setErrorMsg("Decrypt Failed. Check password used.");
             } else {
-                setErrorMsg(ex.message);
+                setErrorMsg(err.message);
             }
         } else if (changePassResult && resultShown) {
             setSuccess(true);

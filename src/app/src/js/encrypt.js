@@ -4,7 +4,8 @@ import { toUtf8Bytes } from "kestrel-crypto/utils";
 import { workerMsgActions } from "./state.js";
 import {
     ResultInfo, MessageInfo, ANIMATION_DURATION,
-    SelectBox, getPublicKey, getPrivateKey
+    SelectBox, getPublicKey, getPrivateKey,
+    createNameSelect, s100MiB, s1GiB
 } from "./common.js";
 
 export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, reloadWorker }) {
@@ -22,8 +23,7 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
     const showSpinner = passEncryptLoading || (anim.start && !anim.met);
     const encryptDisabled = showSpinner || resultShown;
     const showError =  hasError && !showSpinner;
-    const s100MiB = 100 * (1024 * 1024);
-    const s1GiB = 1024 * (1024 * 1024);
+
     const maxFileSize = s1GiB;
 
     function fileChange(event) {
@@ -68,8 +68,7 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
         sendMessage(workerMsgActions.passEncrypt, [plaintextFile, toUtf8Bytes(password)]);
     }
 
-    function doneClick(event) {
-        event.preventDefault();
+    function doneClick() {
         if (passEncryptResult) {
             URL.revokeObjectURL(passEncryptResult.url);
         }
@@ -122,6 +121,7 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
     );
 }
 
+
 export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEncryptLoading, reloadWorker }) {
     const [anim, setAnim] = useState({ start: false, met: false });
     const [resultShown, setResultShown] = useState(false);
@@ -140,42 +140,17 @@ export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEnc
     const showError = hasError && !showSpinner;
     const encryptDisabled = showSpinner || resultShown;
 
-    const s100MiB = 100 * (1024 * 1024);
-    const s1GiB = 1024 * (1024 * 1024);
     const maxFileSize = s1GiB;
 
-    const blankContact = [{ display: "Select Key", value: "" }];
-    const validRecipients = contacts.filter(contact => contact.publicKey != "")
-        .map(contact => {
-            return {
-                display: contact.name,
-                value: contact.name
-            };
-        });
-    const recipientNames = blankContact.concat(validRecipients);
-    const validSenders = contacts.filter(contact => contact.privateKey != "")
-        .map(contact => {
-            return {
-                display: contact.name,
-                value: contact.name
-            };
-        });
-    const senderNames = blankContact.concat(validSenders);
+    const recipientNames = createNameSelect(contacts, (contact => !!contact.publicKey));
+    const senderNames = createNameSelect(contacts, (contact => !!contact.privateKey));
 
     useEffect(() => {
         if (keyEncryptResult && keyEncryptResult.exception) {
-            let ex = keyEncryptResult.exception;
+            let err = keyEncryptResult.exception;
             setHasError(true);
             setResultShown(false);
-            if (ex.name == "KeyUnlockError") {
-                if (ex.message != "") {
-                    setErrorMsg(`Failed to unlock key: ${ex.message}`);
-                } else {
-                    setErrorMsg(`Failed to unlock key. Check password used.`);
-                }
-            } else {
-                setErrorMsg(ex.message);
-            }
+            setErrorMsg(err.message);
         }
     }, [keyEncryptResult]);
 
@@ -240,8 +215,7 @@ export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEnc
         sendMessage(workerMsgActions.keyEncrypt, [plaintextFile, b64PrivateKey, toUtf8Bytes(password), b64PublicKey]);
     }
 
-    function doneClick(event) {
-        event.preventDefault();
+    function doneClick() {
         if (keyEncryptResult) {
             URL.revokeObjectURL(keyEncryptResult.url);
         }
@@ -255,7 +229,6 @@ export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEnc
         setSenderName("");
         setPassword("");
         setHasError(false);
-        setErrorMsg("");
         const lastFileSize = fileSize;
         setFileSize(0);
         if (lastFileSize > s100MiB) {

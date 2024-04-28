@@ -1,11 +1,17 @@
 .error {
-    border-left: 4px solid #900000;
+    border-left: 4px solid #dc3545;
+    padding-left: 4px;
+    padding-top: 4px;
+}
+
+.warn {
+    border-left: 4px solid #ffc107;
     padding-left: 4px;
     padding-top: 4px;
 }
 
 .success {
-    border-left: 4px solid #1AA260;
+    border-left: 4px solid #198754;
     padding-left: 4px;
     padding-top: 4px;
 }

@@ -44,7 +44,7 @@ export const initialState = {
     contactToDelete: null,
     contactToEdit: null,
     contactsInit: false,
-    contacts: [],
+    contacts: [], // Array of { name: "", publicKey: "", privateKey: "" }
     worker: null,
     workerAnimStart: false,
     workerAnimMet: false,

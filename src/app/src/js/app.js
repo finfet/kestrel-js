@@ -315,7 +315,15 @@ export default function App() {
         }
     } else if (state.appNavState == appNavStates.decrypt) {
         if (state.decryptNavState == decryptNavStates.key) {
-            selectedPage = (<KeyDecryptPage />);
+            selectedPage = (
+                <KeyDecryptPage
+                    sendMessage={sendMessage}
+                    contacts={state.contacts}
+                    keyDecryptResult={state.keyDecryptResult}
+                    keyDecryptLoading={state.keyDecryptLoading}
+                    reloadWorker={reloadWorker}
+                />
+            );
         } else if (state.decryptNavState == decryptNavStates.pass) {
             selectedPage = (
                 <PassDecryptPage
