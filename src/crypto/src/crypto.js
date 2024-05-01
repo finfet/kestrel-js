@@ -23,6 +23,10 @@ const wasmData = base64Decode(kwasm);
  * DecryptError::IOWrite
  * DecryptError::Other
  *
+ * ErrorMessage
+ * UnknownError
+ * WasmRuntimeError
+ *
  * Note the EncryptError and IO portions of DecryptError should not occur
  * because we are reding from Uint8Arrays. This is a holdout from disk io
  * operations in the rust library. ErrorMessage and Unknown should also not
@@ -218,7 +222,7 @@ export class Crypto {
             const pubKeyBuf = new Uint8Array(32);
             plaintext = kcrypto.key_decrypt(ciphertext, recipientPrivateKey, fileFormat, pubKeyBuf);
             publicKey = pubKeyBuf;
-        } catch (wasError) {
+        } catch (wasmError) {
             let err = this.getError(wasmError);
             throw err;
         }
@@ -230,6 +234,17 @@ export class Crypto {
     }
 
     getError(wasmError) {
+        if (typeof wasmError !== "string") {
+            if (wasmError instanceof WebAssembly.RuntimeError) {
+                const ex = new Error("Wasm crashed. Input file is likely too large.");
+                ex.name = "WasmRuntimeError";
+                return ex;
+            } else {
+                const ex = new Error("Unknown crypto error");
+                ex.name = "UnknownError";
+                return ex;
+            }
+        }
         let sepIdx = wasmError.indexOf(";");
         if (sepIdx < 1) {
             return new Error(wasmError.toString());
@@ -237,7 +252,7 @@ export class Crypto {
             let name = wasmError.slice(0, sepIdx);
             let msg = wasmError.slice(sepIdx+1, wasmError.length);
             msg = msg.trim();
-            if (name == "Unknown" || name == "ErrorMessage") {
+            if (name == "UnknownError" || name == "ErrorMessage") {
                 const ex = new Error("Crypto error");
                 return ex;
             } else {

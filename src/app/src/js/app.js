@@ -14,16 +14,31 @@ import {
 } from "./contacts.js";
 
 function NavBar({ encryptClick, decryptClick, contactsClick, active }) {
+    const indexUrl = getUrlPath(window.location.pathname);
+
     return (
         <div className="pb-3">
             <ul className="nav">
-                <li className="nav-title"><a className="nav-link" href="/">Kestrel</a></li>
+                <li className="nav-title"><a className="nav-link" href={indexUrl}>Kestrel</a></li>
                 <li onClick={encryptClick} className={"nav-button " + (active == appNavStates.encrypt ? "nav-button-active" : "")}>Encrypt</li>
                 <li onClick={decryptClick} className={"nav-button " + (active == appNavStates.decrypt ? "nav-button-active" : "")}>Decrypt</li>
                 <li onClick={contactsClick} className={"nav-button nav-button-end " + (active == appNavStates.contacts ? "nav-button-active" : "")}>Contacts</li>
             </ul>
         </div>
     );
+}
+
+function getUrlPath(path) {
+    if (!path) {
+        return "/";
+    } else {
+        const idx = path.lastIndexOf("/");
+        if (idx == "-1") {
+            return "/";
+        } else {
+            return path.slice(0, idx + 1);
+        }
+    }
 }
 
 function LoadingNavBar() {
@@ -92,10 +107,6 @@ export default function App() {
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const showSpinner = state.workerLoading || (state.workerAnimStart && !state.workerAnimMet);
-
-    useEffect(() => {
-        reloadWorker();
-    }, []);
 
     useEffect(() => {
         const worker = new Worker("worker.bundle.js");

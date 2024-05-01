@@ -1,6 +1,5 @@
 import { Crypto } from "kestrel-crypto";
 import { lockPrivateKey, unlockPrivateKey, encodePublicKey, decodePublicKey } from "./keyring.js";
-import { toUtf8Bytes } from "kestrel-crypto/utils";
 
 const workerMsgActions = {
     passEncrypt: "pass_encrypt",
@@ -42,7 +41,7 @@ self.onmessage = (e) => {
                 break;
         }
     } catch (err) {
-        self.postMessage({ action: "exception", result: { type: msg.action, msg: err.toString() } });
+        self.postMessage({ action: "exception", result: { type: msg.action, msg: "Exception caught in worker" } });
     }
 }
 
@@ -53,15 +52,19 @@ async function passEncrypt(inputFile, password) {
     const buffer = await inputFile.arrayBuffer();
     const plaintext = new Uint8Array(buffer);
 
-    const ciphertext = crypto.passEncrypt(plaintext, password, salt);
-    const blob = new Blob([ciphertext], { type: "application/octet-stream" });
-    const url = URL.createObjectURL(blob);
+    try {
+        const ciphertext = crypto.passEncrypt(plaintext, password, salt);
+        const blob = new Blob([ciphertext], { type: "application/octet-stream" });
+        const url = URL.createObjectURL(blob);
 
-    const message = {
-        action: workerMsgActions.passEncrypt,
-        result: { url: url, filename: filename }
-    };
-    self.postMessage(message);
+        const message = {
+            action: workerMsgActions.passEncrypt,
+            result: { url: url, filename: filename }
+        };
+        self.postMessage(message);
+    } catch (err) {
+        handleError(err, workerMsgActions.passEncrypt);
+    }
 }
 
 async function passDecrypt(inputFile, password) {
@@ -80,11 +83,7 @@ async function passDecrypt(inputFile, password) {
         };
         self.postMessage(message);
     } catch (err) {
-        const message = {
-            action: workerMsgActions.passDecrypt,
-            result: { exception: { name: err.name, message: err.message } }
-        };
-        self.postMessage(message);
+        handleError(err, workerMsgActions.passDecrypt);
     }
 }
 
@@ -93,7 +92,16 @@ function attemptUnlock(crypto, b64PriavateKey, password, action) {
     try {
         privateKey = unlockPrivateKey(crypto, b64PriavateKey, password);
     } catch (err) {
-        if (err.name == "PrivateKeyFormat" || err.name == "PrivateKeyLength") {
+        if (err.name == "WasmRuntimeError") {
+            const message = {
+                action: "exception",
+                result: { type: "wasm_error", msg: err.message }
+            };
+            return {
+                privateKey: null,
+                exception: message
+            };
+        } else if (err.name == "PrivateKeyFormat" || err.name == "PrivateKeyLength") {
             let ex = new Error(`Failed to unlock key: ${err.message}`);
             ex.name = "KeyUnlockError";
             const message = {
@@ -148,11 +156,7 @@ async function keyEncrypt(inputFile, b64SenderPrivate, senderPass, b64RecipientP
         };
         self.postMessage(message);
     } catch (err) {
-        const message = {
-            action: workerMsgActions.keyEncrypt,
-            result: { exception: { name: err.name, message: err.message } }
-        };
-        self.postMessage(message);
+        handleError(err, workerMsgActions.keyEncrypt);
     }
 }
 
@@ -181,29 +185,28 @@ async function keyDecrypt(inputFile, b64RecipientPrivate, recipientPass) {
         };
         self.postMessage(message);
     } catch (err) {
-        const message = {
-            action: workerMsgActions.keyDecrypt,
-            result: { exception: { name: err.name, message: err.message }}
-        };
-        self.postMessage(message);
+        handleError(err, workerMsgActions.keyDecrypt);
     }
 }
 
 async function generateKey(password) {
     const crypto = await Crypto.createInstance();
+    try {
+        const privateKey = crypto.secureRandom(32);
+        const publicKey = crypto.x25519DerivePublic(privateKey);
+        const salt = crypto.secureRandom(32);
+        const b64PrivateKey = lockPrivateKey(crypto, privateKey, password, salt);
+        const b64PublicKey = encodePublicKey(crypto, publicKey);
 
-    const privateKey = crypto.secureRandom(32);
-    const publicKey = crypto.x25519DerivePublic(privateKey);
-    const salt = crypto.secureRandom(32);
-    const b64PrivateKey = lockPrivateKey(crypto, privateKey, password, salt);
-    const b64PublicKey = encodePublicKey(crypto, publicKey);
+        const message = {
+            action: workerMsgActions.generateKey,
+            result: { publicKey: b64PublicKey, privateKey: b64PrivateKey }
+        };
 
-    const message = {
-        action: workerMsgActions.generateKey,
-        result: { publicKey: b64PublicKey, privateKey: b64PrivateKey }
-    };
-
-    self.postMessage(message);
+        self.postMessage(message);
+    } catch (err) {
+        handleError(err, workerMsgActions.generateKey);
+    }
 }
 
 async function extractKey(b64PrivateKey, password) {
@@ -220,11 +223,7 @@ async function extractKey(b64PrivateKey, password) {
 
         self.postMessage(message);
     } catch (err) {
-        const message = {
-            action: workerMsgActions.extractKey,
-            result: { exception: { name: err.name, message: err.message }}
-        };
-        self.postMessage(message);
+        handleError(err, workerMsgActions.extractKey);
     }
 }
 
@@ -242,11 +241,18 @@ async function changePass(b64PrivateKey, oldPassword, newPassword) {
 
         self.postMessage(message);
     } catch (err) {
-        const message = {
-            action: workerMsgActions.changePass,
-            result: { exception: { name: err.name, message: err.message }}
-        };
+        handleError(err, workerMsgActions.changePass);
+    }
+}
 
+function handleError(err, action) {
+    if (err.name == "WasmRuntimeError") {
+        self.postMessage({ action: "exception", result: { type: "wasm_error", msg: err.message } });
+    } else {
+        const message = {
+            action: action,
+            result: { exception: { name: err.name, message: err.message } }
+        };
         self.postMessage(message);
     }
 }

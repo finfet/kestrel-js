@@ -26,6 +26,15 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
 
     const maxFileSize = s1GiB;
 
+    useEffect(() => {
+        if (passEncryptResult && passEncryptResult.exception) {
+            let err = passEncryptResult.exception;
+            setHasError(true);
+            setResultShown(false);
+            setErrorMsg(err.message);
+        }
+    }, [passEncryptResult]);
+
     function fileChange(event) {
         const file = event.target.files[0];
         setHasError(false);
@@ -147,7 +156,7 @@ export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEnc
 
     useEffect(() => {
         if (keyEncryptResult && keyEncryptResult.exception) {
-            let err = keyEncryptResult.exception;
+            const err = keyEncryptResult.exception;
             setHasError(true);
             setResultShown(false);
             setErrorMsg(err.message);

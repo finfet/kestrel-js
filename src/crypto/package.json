@@ -10,6 +10,7 @@
     },
     "scripts": {
         "build": "node build.js",
+        "prod": "node build.js --prod",
         "dev": "node build.js --watch",
         "test": "node --test tests",
         "prepare": "node build.js"

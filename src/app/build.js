@@ -4,10 +4,14 @@ import * as esbuild from "esbuild";
 async function build() {
     let buildType = "development";
     let watchMode = false;
+    let minify = false;
+    let sourcemap = true;
 
     for (const arg of process.argv) {
         if (arg == "--prod") {
             buildType = "production";
+            minify = true;
+            sourcemap = false;
         } else if (arg == "--watch") {
             watchMode = true;
         }
@@ -23,8 +27,8 @@ async function build() {
         outdir: "dist",
         outbase: "src/js",
         target: "esnext",
-        minify: true,
-        sourcemap: true,
+        minify: minify,
+        sourcemap: sourcemap,
         loader: {
             ".js": "jsx"
         },

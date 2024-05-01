@@ -80,7 +80,13 @@ export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading,
     const generateDisabled =  showSpinner || resultShown;
 
     useEffect(() => {
-        if (generateKeyResult && resultShown) {
+        if (generateKeyResult && generateKeyResult.exception) {
+            let err = generateKeyResult.exception;
+            setHasError(true);
+            setSuccess(false);
+            setResultShown(false);
+            setErrorMsg(err.message);
+        } else if (generateKeyResult && resultShown) {
             const privateKey = generateKeyResult.privateKey;
             const publicKey = generateKeyResult.publicKey;
             addContact({
