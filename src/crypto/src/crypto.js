@@ -163,21 +163,14 @@ export class Crypto {
      * @returns {Uint8Array} Ciphertext
      */
     passEncrypt(plaintext, password, salt, fileFormat = 0x20) {
+        let ciphertext;
         try {
-            const ciphertext = new Vec();
-            let key = this.scrypt(password, salt, SCRYPT_N, SCRYPT_R, SCRYPT_P, 32);
-            const aad = new Uint8Array(PASS_FILE_MAGIC);
-
-            ciphertext.extend(PASS_FILE_MAGIC);
-            ciphertext.extend(salt);
-
-            this.encryptChunks(plaintext, ciphertext, key, aad, CHNUK_SIZE);
-
-            return ciphertext.toBytes();
-        } catch (e) {
-            const err = this.getError(e);
+            ciphertext = kcrypto.pass_encrypt(plaintext, password, salt, fileFormat);
+        } catch (wasmError) {
+            let err = this.getError(wasmError);
             throw err;
         }
+        return ciphertext;
     }
 
     /**
@@ -278,82 +271,4 @@ export class Crypto {
             }
         }
     }
-
-    encryptChunks(plaintext, ciphertext, key, aad, chunkSize) {
-        // @@SECURITY: In the rust impelmentation chunk number is a 64 bit
-        // type. We're going to use 32 bits here because a JavaScript number
-        // can't hold a 64 bit integer and we don't want to mess with BigInt.
-        // This reduces the maximum amount of data that can be encrypted in a
-        // sigle file to ~256TB
-        let chunkNumber = 0;
-        let done = false;
-        let ptOffset = 0;
-        let prev = read(plaintext, ptOffset, chunkSize);
-        let prevSize = prev.size();
-        ptOffset += prevSize;
-        if (prevSize < chunkSize) {
-            done = true;
-        }
-
-        while (true) {
-            let buf = read(plaintext, ptOffset, chunkSize);
-            const bufSize = buf.size();
-            if (bufSize != 0 && done) {
-                throw new Error("Read unexpected data");
-            } else if (bufSize == 0) {
-                done = true;
-            }
-
-            let lastChunkIndicator = 0;
-            if (done) {
-                lastChunkIndicator = 1;
-            }
-            const lastChunkIndicatorBytes = toBeBytes(lastChunkIndicator);
-            let ciphertextLen = prevSize;
-            const ciphertextLenBytes = toBeBytes(ciphertextLen);
-            let authData = new Vec();
-            authData.extend(aad);
-            authData.extend(lastChunkIndicatorBytes);
-            authData.extend(ciphertextLenBytes);
- 
-            const nonce = new Vec();
-            nonce.extend([0x00, 0x00, 0x00, 0x00]);
-            nonce.extend(toLeBytes(chunkNumber));
-            nonce.extend([0x00, 0x00, 0x00, 0x00]);
-            const ct = this.chapolyEncrypt(key, nonce.toBytes(), prev.toBytes(), authData.toBytes());
-
-            const chunkHeader = new Vec();
-            chunkHeader.extend([0x00, 0x00, 0x00, 0x00]);
-            chunkHeader.extend(toBeBytes(chunkNumber));
-            chunkHeader.extend(lastChunkIndicatorBytes);
-            chunkHeader.extend(ciphertextLenBytes);
-
-            ciphertext.extend(chunkHeader.toBytes());
-            ciphertext.extend(ct);
-
-            if (done) {
-                break;
-            }
-
-            prev = new Vec();
-            prev.extend(buf.toBytes());
-            prevSize = bufSize;
-            ptOffset += prevSize;
-
-            // @@SECURITY: It is extremely important that chunk number
-            // increase sequentially by one here.
-            chunkNumber += 1;
-        }
-    }
-}
-
-function read(source, offset, count) {
-    const sourceLen = source.length - offset;
-    const maxLen = Math.min(sourceLen, count);
-    const dest = new Vec();
-    for (let i = offset; i < maxLen + offset; i++) {
-        dest.push(source[i]);
-    }
-
-    return dest;
 }

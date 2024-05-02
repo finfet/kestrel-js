@@ -13,35 +13,31 @@ const workerMsgActions = {
 
 self.onmessage = (e) => {
     const msg = e.data;
-    try {
-        switch (msg.action) {
-            case workerMsgActions.passEncrypt:
-                passEncrypt(msg.args[0], msg.args[1]);
-                break;
-            case workerMsgActions.passDecrypt:
-                passDecrypt(msg.args[0], msg.args[1]);
-                break;
-            case workerMsgActions.keyEncrypt:
-                keyEncrypt(msg.args[0], msg.args[1], msg.args[2], msg.args[3]);
-                break;
-            case workerMsgActions.keyDecrypt:
-                keyDecrypt(msg.args[0], msg.args[1], msg.args[2]);
-                break;
-            case workerMsgActions.generateKey:
-                generateKey(msg.args[0]);
-                break;
-            case workerMsgActions.extractKey:
-                extractKey(msg.args[0], msg.args[1]);
-                break;
-            case workerMsgActions.changePass:
-                changePass(msg.args[0], msg.args[1], msg.args[2]);
-                break;
-            default:
-                self.postMessage({ action: "exception", result: { type: "unknown_action", msg: "Cannot take unknown action" }})
-                break;
-        }
-    } catch (err) {
-        self.postMessage({ action: "exception", result: { type: msg.action, msg: "Exception caught in worker" } });
+    switch (msg.action) {
+        case workerMsgActions.passEncrypt:
+            passEncrypt(msg.args[0], msg.args[1]);
+            break;
+        case workerMsgActions.passDecrypt:
+            passDecrypt(msg.args[0], msg.args[1]);
+            break;
+        case workerMsgActions.keyEncrypt:
+            keyEncrypt(msg.args[0], msg.args[1], msg.args[2], msg.args[3]);
+            break;
+        case workerMsgActions.keyDecrypt:
+            keyDecrypt(msg.args[0], msg.args[1], msg.args[2]);
+            break;
+        case workerMsgActions.generateKey:
+            generateKey(msg.args[0]);
+            break;
+        case workerMsgActions.extractKey:
+            extractKey(msg.args[0], msg.args[1]);
+            break;
+        case workerMsgActions.changePass:
+            changePass(msg.args[0], msg.args[1], msg.args[2]);
+            break;
+        default:
+            self.postMessage({ action: "exception", result: { type: "unknown_action", msg: "Cannot take unknown action" }})
+            break;
     }
 }
 
