@@ -61,7 +61,7 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
         }
         if (fileSize > maxFileSize) {
             setHasError(true);
-            setErrorMsg("File is too large. Maximum is 1GB");
+            setErrorMsg("File is too large. Maximum is 200MB");
             return;
         }
         if (password != confirmPassword) {
@@ -196,7 +196,7 @@ export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEnc
 
         if (fileSize > maxFileSize) {
             setHasError(true);
-            setErrorMsg("File is too large. Maximum is 1GB");
+            setErrorMsg("File is too large. Maximum is 200MB");
             return;
         }
 

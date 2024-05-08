@@ -63,7 +63,7 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
 
         if (fileSize > maxFileSize) {
             setHasError(true);
-            setErrorMsg("File is too large. Maximum 1GB");
+            setErrorMsg("File is too large. Maximum is 200MB");
             return;
         }
 
@@ -219,7 +219,7 @@ export function KeyDecryptPage({ sendMessage, contacts, keyDecryptResult, keyDec
 
         if (fileSize > maxFileSize) {
             setHasError(true);
-            setErrorMsg("File is too large. Maximum 1GB");
+            setErrorMsg("File is too large. Maximum is 200MB");
             return;
         }
 

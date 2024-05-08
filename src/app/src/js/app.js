@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from "react";
+import { useEffect, useRef, useReducer } from "react";
 
 import {
     reducer, initialState, appNavStates,
@@ -105,6 +105,8 @@ function validContactData(contacts) {
 
 export default function App() {
     const [state, dispatch] = useReducer(reducer, initialState);
+    const currentHashRef = useRef(state.currentHash);
+    const contactsRef = useRef(state.contacts);
 
     const showSpinner = state.workerLoading || (state.workerAnimStart && !state.workerAnimMet);
 
@@ -163,6 +165,81 @@ export default function App() {
             localStorage.setItem("contacts", JSON.stringify(state.contacts));
         }
     }, [state.contacts, state.contactsInit]);
+
+    function handleHashChange() {
+        function getContact(name) {
+            for (let i = 0; i < contactsRef.current.length; i++) {
+                if (name == contactsRef.current[i].name) {
+                    return contactsRef.current[i];
+                }
+            }
+
+            return null;
+        }
+
+        const navHash = window.location.hash;
+        if (navHash != currentHashRef.current) {
+            if (navHash == "#encrypt") {
+                navEncryptClick();
+            } else if (navHash == "#decrypt") {
+                navDecryptClick();
+            } else if (navHash == "#contacts") {
+                navContactsClick();
+            } else if (navHash == "#key-encrypt") {
+                makeEncryptPageSelection(true);
+            } else if (navHash == "#pass-encrypt") {
+                makeEncryptPageSelection(false);
+            } else if (navHash == "#key-decrypt") {
+                makeDecryptPageSelection(true);
+            } else if (navHash == "#pass-decrypt") {
+                makeDecryptPageSelection(false);
+            } else if (navHash == "#gen-key") {
+                navGenKeyClick();
+            } else if (navHash == "#add-key") {
+                navAddKeyClick();
+            } else if (navHash.includes("#edit-key")) {
+                const url = decodeURIComponent(navHash);
+                const name = url.slice(10);
+                const contact = getContact(name);
+                if (!contact) {
+                    navContactsClick();
+                } else {
+                    navEditKeyClick(contact);
+                }
+            } else if (navHash.includes("#delete-key")) {
+                const url = decodeURIComponent(navHash);
+                const name = url.slice(12);
+                const contact = getContact(name);
+                if (!contact) {
+                    navContactsClick();
+                } else {
+                    navDeleteKeyClick(contact);
+                }
+            } else if (navHash == "#extract-pub-key") {
+                navExtractClick();
+            } else if (navHash == "#change-pass") {
+                navChangePassClick();
+            } else {
+                dispatch({ action: "not_found" });
+            }
+        }
+    }
+
+    useEffect(() => {
+        window.addEventListener("hashchange", handleHashChange);
+        return () => {
+            window.removeEventListener("hashchange", handleHashChange);
+        };
+    }, []);
+
+    useEffect(() => {
+        currentHashRef.current = state.currentHash;
+        window.location.hash = state.currentHash;
+    }, [state.currentHash]);
+
+    useEffect(() => {
+        contactsRef.current = state.contacts;
+    }, [state.contacts]);
 
     function reloadWorker() {
         dispatch({ action: "reload_worker" });
@@ -275,6 +352,24 @@ export default function App() {
         }
     }
 
+    if (state.notFound) {
+        const indexUrl = getUrlPath(window.location.pathname);
+
+        return (
+            <div>
+                <div className="pb-3">
+                    <ul className="nav">
+                        <li className="nav-title"><a className="nav-link" href={indexUrl}>Kestrel</a></li>
+                    </ul>
+                </div>
+                <div className="error">Error: Page not found</div>
+                <div className="pt-3">
+                    <button className="link-button" onClick={() => { window.location.reload(); }}>Reload</button>
+                </div>
+            </div>
+        );
+    }
+
     if (state.hasError) {
         return (
             <div>
@@ -285,10 +380,10 @@ export default function App() {
                     active={state.appNavState} />
                 <div className="error">Error: {state.hasError.msg}</div>
                 <div className="pt-3">
-                    <button className="link-button" onClick={() => { window.location.reload(); }}>Refresh</button>
+                    <button className="link-button" onClick={() => { window.location.reload(); }}>Reload</button>
                 </div>
             </div>
-        )
+        );
     }
 
     if (showSpinner) {
@@ -297,7 +392,7 @@ export default function App() {
                 <LoadingNavBar />
                 <DotLoader />
             </div>
-        )
+        );
     }
 
     let selectedPage = (<div>Error: Invalid State</div>);

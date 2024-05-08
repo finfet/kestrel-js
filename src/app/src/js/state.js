@@ -38,6 +38,7 @@ export const contactsNavStates = {
 
 export const initialState = {
     appNavState: appNavStates.encrypt,
+    currentHash: "#encrypt",
     encryptNavState: encryptNavStates.start,
     decryptNavState: decryptNavStates.start,
     contactsNavState: contactsNavStates.start,
@@ -51,6 +52,7 @@ export const initialState = {
     workerLoading: false,
     workerReload: false,
     hasError: null,
+    notFound: false,
     passEncryptResult: null,
     passEncryptLoading: false,
     passDecryptResult: null,
@@ -200,71 +202,99 @@ export function reducer(state, action) {
     } else if (action.action == "nav_encrypt_clicked") {
         return {
             ...state,
+            currentHash: "#encrypt",
+            notFound: false,
             appNavState: appNavStates.encrypt,
             encryptNavState: encryptNavStates.start
         };
     } else if (action.action == "nav_decrypt_clicked") {
         return {
             ...state,
+            currentHash: "#decrypt",
+            notFound: false,
             appNavState: appNavStates.decrypt,
             decryptNavState: decryptNavStates.start
         };
     } else if (action.action == "nav_contacts_clicked") {
         return {
             ...state,
+            currentHash: "#contacts",
+            notFound: false,
             appNavState: appNavStates.contacts,
             contactsNavState: contactsNavStates.start
         };
     } else if (action.action == "nav_encrypt_select_key") {
         return {
             ...state,
+            currentHash: "#key-encrypt",
+            notFound: false,
             encryptNavState: encryptNavStates.key
         };
     } else if (action.action == "nav_encrypt_select_pass") {
         return {
             ...state,
+            currentHash: "#pass-encrypt",
+            notFound: false,
             encryptNavState: encryptNavStates.pass
         };
     } else if (action.action == "nav_decrypt_select_key") {
         return {
             ...state,
+            currentHash: "#key-decrypt",
+            notFound: false,
             decryptNavState: decryptNavStates.key
         };
     } else if (action.action == "nav_decrypt_select_pass") {
         return {
             ...state,
+            currentHash: "#pass-decrypt",
+            notFound: false,
             decryptNavState: decryptNavStates.pass
         };
     } else if (action.action == "nav_contacts_genkey") {
         return {
             ...state,
+            currentHash: "#gen-key",
+            notFound: false,
             contactsNavState: contactsNavStates.genKey
         };
     } else if (action.action == "nav_contacts_addkey") {
         return {
             ...state,
+            currentHash: "#add-key",
+            notFound: false,
             contactsNavState: contactsNavStates.addKey
         };
     } else if (action.action == "nav_contacts_editkey") {
+        const hash = `#edit-key-${encodeURIComponent(action.contact.name)}`;
         return {
             ...state,
+            currentHash: hash,
+            notFound: false,
             contactToEdit: action.contact,
             contactsNavState: contactsNavStates.editKey
         };
     } else if (action.action == "nav_contacts_deletekey") {
+        const hash = `#delete-key-${encodeURIComponent(action.contact.name)}`;
         return {
             ...state,
+            currentHash: hash,
+            notFound: false,
             contactToDelete: action.contact,
             contactsNavState: contactsNavStates.deleteKey
         };
     } else if (action.action == "nav_contacts_extract") {
         return {
             ...state,
+            currentHash: "#extract-pub-key",
+            notFound: false,
             contactsNavState: contactsNavStates.extract
         };
     } else if (action.action == "nav_contacts_changepass") {
         return {
             ...state,
+            currentHash: "#change-pass",
+            notFound: false,
             contactsNavState: contactsNavStates.changePass
         };
     } else if (action.action == "init_contacts") {
@@ -290,6 +320,11 @@ export function reducer(state, action) {
             contacts: contacts,
             contactsInit: contactsInit,
             hasError: action.exception,
+        };
+    } else if (action.action == "not_found") {
+        return {
+            ...state,
+            notFound: true
         };
     } else {
         return {
