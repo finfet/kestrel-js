@@ -285,7 +285,7 @@ export default function App() {
                     active={state.appNavState} />
                 <div className="error">Error: {state.hasError.msg}</div>
                 <div className="pt-3">
-                    <a href="/">Refresh</a>
+                    <button className="link-button" onClick={() => { window.location.reload(); }}>Refresh</button>
                 </div>
             </div>
         )
@@ -311,6 +311,7 @@ export default function App() {
                     keyEncryptResult={state.keyEncryptResult}
                     keyEncryptLoading={state.keyEncryptLoading}
                     reloadWorker={reloadWorker}
+                    backClick={navEncryptClick}
                 />
             );
         } else if (state.encryptNavState == encryptNavStates.pass) {
@@ -319,7 +320,9 @@ export default function App() {
                     sendMessage={sendMessage}
                     passEncryptResult={state.passEncryptResult}
                     passEncryptLoading={state.passEncryptLoading}
-                    reloadWorker={reloadWorker} />
+                    reloadWorker={reloadWorker}
+                    backClick={navEncryptClick}
+                />
             );
         } else {
             selectedPage = (<SelectPage makePageSelection={makeEncryptPageSelection} title="Encrypt File" />);
@@ -333,6 +336,7 @@ export default function App() {
                     keyDecryptResult={state.keyDecryptResult}
                     keyDecryptLoading={state.keyDecryptLoading}
                     reloadWorker={reloadWorker}
+                    backClick={navDecryptClick}
                 />
             );
         } else if (state.decryptNavState == decryptNavStates.pass) {
@@ -342,6 +346,7 @@ export default function App() {
                     passDecryptResult={state.passDecryptResult}
                     passDecryptLoading={state.passDecryptLoading}
                     reloadWorker={reloadWorker}
+                    backClick={navDecryptClick}
                 />
             );
         } else {

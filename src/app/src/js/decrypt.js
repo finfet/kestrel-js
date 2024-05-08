@@ -5,10 +5,10 @@ import { workerMsgActions } from "./state.js";
 import {
     ResultInfo, MessageInfo, ANIMATION_DURATION,
     createNameSelect, SelectBox, getPrivateKey,
-    s100MiB, s1GiB
+    s100MiB, BackButton
 } from "./common.js";
 
-export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoading, reloadWorker }) {
+export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoading, reloadWorker, backClick }) {
     const [anim, setAnim] = useState({ start: false, met: false });
     const [resultShown, setResultShown] = useState(false);
 
@@ -24,9 +24,9 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
     const decryptDisabled = showSpinner || resultShown;
     const showError = hasError && !showSpinner;
 
-    // 1GiB + file format overhead (32 bytes per 64k + 36 byte header)
+    // 200MiB + file format overhead (32 bytes per 64k + 36 byte header)
     const overhead = (512 * 1024) + 36;
-    const maxFileSize = s1GiB + overhead;
+    const maxFileSize = (2 * s100MiB) + overhead;
 
     useEffect(() => {
         if (passDecryptResult && passDecryptResult.exception) {
@@ -99,6 +99,7 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
 
     return (
         <div>
+            <BackButton backClick={backClick} />
             <h4>Decrypt with Password</h4>
             <form>
             <div className="form-group pt-3">
@@ -125,7 +126,7 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
     );
 }
 
-export function KeyDecryptPage({ sendMessage, contacts, keyDecryptResult, keyDecryptLoading, reloadWorker }) {
+export function KeyDecryptPage({ sendMessage, contacts, keyDecryptResult, keyDecryptLoading, reloadWorker, backClick }) {
     const [anim, setAnim] = useState({ start: false, met: false });
     const [resultShown, setResultShown] = useState(false);
     const [fileSize, setFileSize] = useState(0);
@@ -154,7 +155,7 @@ export function KeyDecryptPage({ sendMessage, contacts, keyDecryptResult, keyDec
 
     // 1GiB + file format overhead (32 bytes per 64k + 132 byte header)
     const overhead = (512 * 1024) + 132;
-    const maxFileSize = s1GiB + overhead;
+    const maxFileSize = (2 * s100MiB) + overhead;
 
     const recipientNames = createNameSelect(contacts, (contact => !!contact.privateKey));
 
@@ -264,6 +265,7 @@ export function KeyDecryptPage({ sendMessage, contacts, keyDecryptResult, keyDec
 
     return (
         <div>
+            <BackButton backClick={backClick} />
             <h4>Decrypt with Key</h4>
             <form>
             <div className="form-group pt-3">

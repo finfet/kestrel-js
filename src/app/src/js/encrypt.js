@@ -5,10 +5,10 @@ import { workerMsgActions } from "./state.js";
 import {
     ResultInfo, MessageInfo, ANIMATION_DURATION,
     SelectBox, getPublicKey, getPrivateKey,
-    createNameSelect, s100MiB, s1GiB
+    createNameSelect, s100MiB, BackButton
 } from "./common.js";
 
-export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, reloadWorker }) {
+export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoading, reloadWorker, backClick }) {
     const [anim, setAnim] = useState({ start: false, met: false });
     const [resultShown, setResultShown] = useState(false);
 
@@ -24,7 +24,7 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
     const encryptDisabled = showSpinner || resultShown;
     const showError =  hasError && !showSpinner;
 
-    const maxFileSize = s1GiB;
+    const maxFileSize = 2 * s100MiB;
 
     useEffect(() => {
         if (passEncryptResult && passEncryptResult.exception) {
@@ -100,6 +100,7 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
 
     return (
         <div>
+            <BackButton backClick={backClick} />
             <h4>Encrypt with Password</h4>
             <form>
             <div className="form-group pt-3">
@@ -131,7 +132,7 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
 }
 
 
-export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEncryptLoading, reloadWorker }) {
+export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEncryptLoading, reloadWorker, backClick }) {
     const [anim, setAnim] = useState({ start: false, met: false });
     const [resultShown, setResultShown] = useState(false);
     const [fileSize, setFileSize] = useState(0);
@@ -149,7 +150,7 @@ export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEnc
     const showError = hasError && !showSpinner;
     const encryptDisabled = showSpinner || resultShown;
 
-    const maxFileSize = s1GiB;
+    const maxFileSize = 2 * s100MiB;
 
     const recipientNames = createNameSelect(contacts, (contact => !!contact.publicKey));
     const senderNames = createNameSelect(contacts, (contact => !!contact.privateKey));
@@ -247,6 +248,7 @@ export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEnc
 
     return (
         <div>
+            <BackButton backClick={backClick} />
             <h4>Encrypt with Key</h4>
             <form>
             <div className="form-group pt-3">

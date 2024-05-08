@@ -1,5 +1,5 @@
 import init, * as kcrypto from "./kestrel_wasm.js";
-import { base64Decode, Vec, toBeBytes, toLeBytes } from "./utils.js";
+import { base64Decode } from "./utils.js";
 import kwasm from "./kestrel_wasm_bg.wasm";
 
 const wasmData = base64Decode(kwasm);

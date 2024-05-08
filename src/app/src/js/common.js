@@ -38,6 +38,7 @@ export function DownloadIcon() {
     return (
         <span className="icon icon-download">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                role="graphics-symbol" aria-label="download"
                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -52,6 +53,7 @@ export function BackIcon() {
     return (
         <span className="icon icon-back">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                role="graphics-symbol" aria-label="back"
                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="15 18 9 12 15 6"></polyline>
@@ -64,12 +66,26 @@ export function DeleteIcon() {
     return (
         <span className="icon icon-delete">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            role="graphics-symbol" aria-label="delete"
             viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
             strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
             </svg>
         </span>
+    );
+}
+
+export function BackButton({ backClick }) {
+    return (
+        <div className="row-container pb-3">
+            <div>
+                <button className="link-button" onClick={backClick}>
+                    <BackIcon />
+                    <span>Back</span>
+                </button>
+            </div>
+        </div>
     );
 }
 

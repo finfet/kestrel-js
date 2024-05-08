@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base64Decode, toUtf8Bytes } from "kestrel-crypto/utils";
 import { workerMsgActions } from "./state";
-import { ANIMATION_DURATION, MessageInfo, ResultDone, SelectBox, DeleteIcon, BackIcon } from "./common";
+import { ANIMATION_DURATION, MessageInfo, ResultDone, SelectBox, DeleteIcon, BackButton } from "./common";
 
 function nameExists(name, contacts) {
     for (let i = 0; i < contacts.length; i++) {
@@ -45,19 +45,6 @@ function validPrivateKey(privateKey) {
         return false;
     }
     return true;
-}
-
-function BackButton({ backClick }) {
-    return (
-        <div className="row-container pb-3">
-            <div>
-                <button className="link-button" onClick={backClick}>
-                    <BackIcon />
-                    <span>Back</span>
-                </button>
-            </div>
-        </div>
-    );
 }
 
 export function GenKeyPage({ sendMessage, generateKeyResult, generateKeyLoading, contacts, addContact, backClick }) {
