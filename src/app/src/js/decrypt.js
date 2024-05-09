@@ -39,6 +39,11 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
                 setErrorMsg(ex.message);
             }
         }
+        return () => {
+            if (passDecryptResult && !passDecryptResult.exception) {
+                URL.revokeObjectURL(passDecryptResult.url);
+            }
+        }
     }, [passDecryptResult]);
 
     function fileChange(event) {
@@ -78,9 +83,6 @@ export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoa
     }
 
     function doneClick() {
-        if (passDecryptResult && passDecryptResult.url) {
-            URL.revokeObjectURL(passDecryptResult.url);
-        }
         setAnim({ start: false, met: false });
         setResultShown(false);
         setCiphertextFile(null);
@@ -168,6 +170,11 @@ export function KeyDecryptPage({ sendMessage, contacts, keyDecryptResult, keyDec
         } else if (keyDecryptResult && resultShown) {
             setSenderPublicKey(keyDecryptResult.publicKey);
         }
+        return () => {
+            if (keyDecryptResult && !keyDecryptResult.exception) {
+                URL.revokeObjectURL(keyDecryptResult.url);
+            }
+        }
     }, [keyDecryptResult]);
 
     useEffect(() => {
@@ -242,9 +249,6 @@ export function KeyDecryptPage({ sendMessage, contacts, keyDecryptResult, keyDec
     }
 
     function doneClick() {
-        if (keyDecryptResult) {
-            URL.revokeObjectURL(keyDecryptResult.url);
-        }
         setAnim({ start: false, met: false });
         setResultShown(false);
         setCiphertextFile(null);

@@ -179,45 +179,45 @@ export default function App() {
 
         const navHash = window.location.hash;
         if (navHash != currentHashRef.current) {
-            if (navHash == "#encrypt") {
+            if (navHash == "#/encrypt") {
                 navEncryptClick();
-            } else if (navHash == "#decrypt") {
+            } else if (navHash == "#/decrypt") {
                 navDecryptClick();
-            } else if (navHash == "#contacts") {
+            } else if (navHash == "#/contacts") {
                 navContactsClick();
-            } else if (navHash == "#key-encrypt") {
+            } else if (navHash == "#/key-encrypt") {
                 makeEncryptPageSelection(true);
-            } else if (navHash == "#pass-encrypt") {
+            } else if (navHash == "#/pass-encrypt") {
                 makeEncryptPageSelection(false);
-            } else if (navHash == "#key-decrypt") {
+            } else if (navHash == "#/key-decrypt") {
                 makeDecryptPageSelection(true);
-            } else if (navHash == "#pass-decrypt") {
+            } else if (navHash == "#/pass-decrypt") {
                 makeDecryptPageSelection(false);
-            } else if (navHash == "#gen-key") {
+            } else if (navHash == "#/gen-key") {
                 navGenKeyClick();
-            } else if (navHash == "#add-key") {
+            } else if (navHash == "#/add-key") {
                 navAddKeyClick();
-            } else if (navHash.includes("#edit-key")) {
+            } else if (navHash.includes("#/edit-key")) {
                 const url = decodeURIComponent(navHash);
-                const name = url.slice(10);
+                const name = url.slice(11);
                 const contact = getContact(name);
                 if (!contact) {
                     navContactsClick();
                 } else {
                     navEditKeyClick(contact);
                 }
-            } else if (navHash.includes("#delete-key")) {
+            } else if (navHash.includes("#/delete-key")) {
                 const url = decodeURIComponent(navHash);
-                const name = url.slice(12);
+                const name = url.slice(13);
                 const contact = getContact(name);
                 if (!contact) {
                     navContactsClick();
                 } else {
                     navDeleteKeyClick(contact);
                 }
-            } else if (navHash == "#extract-pub-key") {
+            } else if (navHash == "#/extract-pub-key") {
                 navExtractClick();
-            } else if (navHash == "#change-pass") {
+            } else if (navHash == "#/change-pass") {
                 navChangePassClick();
             } else {
                 dispatch({ action: "not_found" });

@@ -33,6 +33,11 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
             setResultShown(false);
             setErrorMsg(err.message);
         }
+        return () => {
+            if (passEncryptResult && !passEncryptResult.exception) {
+                URL.revokeObjectURL(passEncryptResult.url);
+            }
+        }
     }, [passEncryptResult]);
 
     function fileChange(event) {
@@ -78,9 +83,6 @@ export function PassEncryptPage({ sendMessage, passEncryptResult, passEncryptLoa
     }
 
     function doneClick() {
-        if (passEncryptResult) {
-            URL.revokeObjectURL(passEncryptResult.url);
-        }
         setAnim({ start: false, met: false });
         setResultShown(false);
         setPlaintextFile(null);
@@ -162,6 +164,11 @@ export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEnc
             setResultShown(false);
             setErrorMsg(err.message);
         }
+        return () => {
+            if (keyEncryptResult && !keyEncryptResult.exception) {
+                URL.revokeObjectURL(keyEncryptResult.url);
+            }
+        }
     }, [keyEncryptResult]);
 
     function fileChange(event) {
@@ -226,9 +233,6 @@ export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEnc
     }
 
     function doneClick() {
-        if (keyEncryptResult) {
-            URL.revokeObjectURL(keyEncryptResult.url);
-        }
         setAnim({ start: false, met: false });
         setResultShown(false);
         setPlaintextFile(null);
