@@ -228,6 +228,7 @@ export function reducer(state, action) {
             ...state,
             currentHash: "#/key-encrypt",
             notFound: false,
+            appNavState: appNavStates.encrypt,
             encryptNavState: encryptNavStates.key
         };
     } else if (action.action == "nav_encrypt_select_pass") {
@@ -235,6 +236,7 @@ export function reducer(state, action) {
             ...state,
             currentHash: "#/pass-encrypt",
             notFound: false,
+            appNavState: appNavStates.encrypt,
             encryptNavState: encryptNavStates.pass
         };
     } else if (action.action == "nav_decrypt_select_key") {
@@ -242,6 +244,7 @@ export function reducer(state, action) {
             ...state,
             currentHash: "#/key-decrypt",
             notFound: false,
+            appNavState: appNavStates.decrypt,
             decryptNavState: decryptNavStates.key
         };
     } else if (action.action == "nav_decrypt_select_pass") {
@@ -249,6 +252,7 @@ export function reducer(state, action) {
             ...state,
             currentHash: "#/pass-decrypt",
             notFound: false,
+            appNavState: appNavStates.decrypt,
             decryptNavState: decryptNavStates.pass
         };
     } else if (action.action == "nav_contacts_genkey") {
@@ -256,6 +260,7 @@ export function reducer(state, action) {
             ...state,
             currentHash: "#/gen-key",
             notFound: false,
+            appNavState: appNavStates.contacts,
             contactsNavState: contactsNavStates.genKey
         };
     } else if (action.action == "nav_contacts_addkey") {
@@ -263,6 +268,7 @@ export function reducer(state, action) {
             ...state,
             currentHash: "#/add-key",
             notFound: false,
+            appNavState: appNavStates.contacts,
             contactsNavState: contactsNavStates.addKey
         };
     } else if (action.action == "nav_contacts_editkey") {
@@ -272,6 +278,7 @@ export function reducer(state, action) {
             currentHash: hash,
             notFound: false,
             contactToEdit: action.contact,
+            appNavState: appNavStates.contacts,
             contactsNavState: contactsNavStates.editKey
         };
     } else if (action.action == "nav_contacts_deletekey") {
@@ -281,6 +288,7 @@ export function reducer(state, action) {
             currentHash: hash,
             notFound: false,
             contactToDelete: action.contact,
+            appNavState: appNavStates.contacts,
             contactsNavState: contactsNavStates.deleteKey
         };
     } else if (action.action == "nav_contacts_extract") {
@@ -288,6 +296,7 @@ export function reducer(state, action) {
             ...state,
             currentHash: "#/extract-pub-key",
             notFound: false,
+            appNavState: appNavStates.contacts,
             contactsNavState: contactsNavStates.extract
         };
     } else if (action.action == "nav_contacts_changepass") {
@@ -295,6 +304,7 @@ export function reducer(state, action) {
             ...state,
             currentHash: "#/change-pass",
             notFound: false,
+            appNavState: appNavStates.contacts,
             contactsNavState: contactsNavStates.changePass
         };
     } else if (action.action == "init_contacts") {

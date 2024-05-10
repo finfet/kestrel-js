@@ -107,6 +107,8 @@ export default function App() {
     const [state, dispatch] = useReducer(reducer, initialState);
     const currentHashRef = useRef(state.currentHash);
     const contactsRef = useRef(state.contacts);
+    const hashInitRef = useRef(null);
+    const hashLoadedRef = useRef(false);
 
     const showSpinner = state.workerLoading || (state.workerAnimStart && !state.workerAnimMet);
 
@@ -233,13 +235,26 @@ export default function App() {
     }, []);
 
     useEffect(() => {
+        if (hashInitRef.current === null) {
+            hashInitRef.current = window.location.hash;
+        }
         currentHashRef.current = state.currentHash;
+        console.log("currentHashRef set:", currentHashRef.current);
         window.location.hash = state.currentHash;
     }, [state.currentHash]);
 
     useEffect(() => {
         contactsRef.current = state.contacts;
     }, [state.contacts]);
+
+    useEffect(() => {
+        if (state.contactsInit && !hashLoadedRef.current) {
+            hashLoadedRef.current = true;
+            if (hashInitRef.current != "") {
+                window.location.hash = hashInitRef.current;
+            }
+        }
+    }, [state.contactsInit]);
 
     function reloadWorker() {
         dispatch({ action: "reload_worker" });
