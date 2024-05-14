@@ -196,30 +196,36 @@ export function pass_decrypt(ciphertext, password, file_format) {
 /**
 * Key based encryption
 *
-* For ephem_private and payload_key, pass empty slices (Uint8Array) which
-* will be treated as the None option
+* For ephem_private, ephem_public and payload_key, pass
+* empty slices (Uint8Array) which will be treated as the None option
 * @param {Uint8Array} plaintext
 * @param {Uint8Array} sender_private
+* @param {Uint8Array} sender_public
 * @param {Uint8Array} recipient_public
 * @param {Uint8Array} ephem_private
+* @param {Uint8Array} ephem_public
 * @param {Uint8Array} payload_key
 * @param {number} file_format
 * @returns {Uint8Array}
 */
-export function key_encrypt(plaintext, sender_private, recipient_public, ephem_private, payload_key, file_format) {
+export function key_encrypt(plaintext, sender_private, sender_public, recipient_public, ephem_private, ephem_public, payload_key, file_format) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
         const ptr0 = passArray8ToWasm0(plaintext, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
         const ptr1 = passArray8ToWasm0(sender_private, wasm.__wbindgen_malloc);
         const len1 = WASM_VECTOR_LEN;
-        const ptr2 = passArray8ToWasm0(recipient_public, wasm.__wbindgen_malloc);
+        const ptr2 = passArray8ToWasm0(sender_public, wasm.__wbindgen_malloc);
         const len2 = WASM_VECTOR_LEN;
-        const ptr3 = passArray8ToWasm0(ephem_private, wasm.__wbindgen_malloc);
+        const ptr3 = passArray8ToWasm0(recipient_public, wasm.__wbindgen_malloc);
         const len3 = WASM_VECTOR_LEN;
-        const ptr4 = passArray8ToWasm0(payload_key, wasm.__wbindgen_malloc);
+        const ptr4 = passArray8ToWasm0(ephem_private, wasm.__wbindgen_malloc);
         const len4 = WASM_VECTOR_LEN;
-        wasm.key_encrypt(retptr, ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, file_format);
+        const ptr5 = passArray8ToWasm0(ephem_public, wasm.__wbindgen_malloc);
+        const len5 = WASM_VECTOR_LEN;
+        const ptr6 = passArray8ToWasm0(payload_key, wasm.__wbindgen_malloc);
+        const len6 = WASM_VECTOR_LEN;
+        wasm.key_encrypt(retptr, ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, ptr6, len6, file_format);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
         var r2 = getInt32Memory0()[retptr / 4 + 2];
@@ -227,9 +233,9 @@ export function key_encrypt(plaintext, sender_private, recipient_public, ephem_p
         if (r3) {
             throw takeObject(r2);
         }
-        var v6 = getArrayU8FromWasm0(r0, r1).slice();
+        var v8 = getArrayU8FromWasm0(r0, r1).slice();
         wasm.__wbindgen_free(r0, r1 * 1, 1);
-        return v6;
+        return v8;
     } finally {
         wasm.__wbindgen_add_to_stack_pointer(16);
     }
@@ -242,20 +248,23 @@ export function key_encrypt(plaintext, sender_private, recipient_public, ephem_p
 * key will be written into the buffer if decryption is successful.
 * @param {Uint8Array} ciphertext
 * @param {Uint8Array} recipient_private
+* @param {Uint8Array} recipient_public
 * @param {number} file_format
 * @param {Uint8Array} public_key
 * @returns {Uint8Array}
 */
-export function key_decrypt(ciphertext, recipient_private, file_format, public_key) {
+export function key_decrypt(ciphertext, recipient_private, recipient_public, file_format, public_key) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
         const ptr0 = passArray8ToWasm0(ciphertext, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
         const ptr1 = passArray8ToWasm0(recipient_private, wasm.__wbindgen_malloc);
         const len1 = WASM_VECTOR_LEN;
-        var ptr2 = passArray8ToWasm0(public_key, wasm.__wbindgen_malloc);
-        var len2 = WASM_VECTOR_LEN;
-        wasm.key_decrypt(retptr, ptr0, len0, ptr1, len1, file_format, ptr2, len2, addHeapObject(public_key));
+        const ptr2 = passArray8ToWasm0(recipient_public, wasm.__wbindgen_malloc);
+        const len2 = WASM_VECTOR_LEN;
+        var ptr3 = passArray8ToWasm0(public_key, wasm.__wbindgen_malloc);
+        var len3 = WASM_VECTOR_LEN;
+        wasm.key_decrypt(retptr, ptr0, len0, ptr1, len1, ptr2, len2, file_format, ptr3, len3, addHeapObject(public_key));
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
         var r2 = getInt32Memory0()[retptr / 4 + 2];
@@ -263,9 +272,9 @@ export function key_decrypt(ciphertext, recipient_private, file_format, public_k
         if (r3) {
             throw takeObject(r2);
         }
-        var v4 = getArrayU8FromWasm0(r0, r1).slice();
+        var v5 = getArrayU8FromWasm0(r0, r1).slice();
         wasm.__wbindgen_free(r0, r1 * 1, 1);
-        return v4;
+        return v5;
     } finally {
         wasm.__wbindgen_add_to_stack_pointer(16);
     }
@@ -435,7 +444,7 @@ function __wbg_get_imports() {
         const ret = getObject(arg0);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbg_crypto_566d7465cdbb6b7a = function(arg0) {
+    imports.wbg.__wbg_crypto_1d1f22824a6a080c = function(arg0) {
         const ret = getObject(arg0).crypto;
         return addHeapObject(ret);
     };
@@ -444,15 +453,15 @@ function __wbg_get_imports() {
         const ret = typeof(val) === 'object' && val !== null;
         return ret;
     };
-    imports.wbg.__wbg_process_dc09a8c7d59982f6 = function(arg0) {
+    imports.wbg.__wbg_process_4a72847cc503995b = function(arg0) {
         const ret = getObject(arg0).process;
         return addHeapObject(ret);
     };
-    imports.wbg.__wbg_versions_d98c6400c6ca2bd8 = function(arg0) {
+    imports.wbg.__wbg_versions_f686565e586dd935 = function(arg0) {
         const ret = getObject(arg0).versions;
         return addHeapObject(ret);
     };
-    imports.wbg.__wbg_node_caaf83d002149bd5 = function(arg0) {
+    imports.wbg.__wbg_node_104a2ff8d6ea03a2 = function(arg0) {
         const ret = getObject(arg0).node;
         return addHeapObject(ret);
     };
@@ -460,15 +469,7 @@ function __wbg_get_imports() {
         const ret = typeof(getObject(arg0)) === 'string';
         return ret;
     };
-    imports.wbg.__wbg_msCrypto_0b84745e9245cdf6 = function(arg0) {
-        const ret = getObject(arg0).msCrypto;
-        return addHeapObject(ret);
-    };
-    imports.wbg.__wbg_newwithlength_e9b4878cebadb3d3 = function(arg0) {
-        const ret = new Uint8Array(arg0 >>> 0);
-        return addHeapObject(ret);
-    };
-    imports.wbg.__wbg_require_94a9da52636aacbf = function() { return handleError(function () {
+    imports.wbg.__wbg_require_cca90b1a94a0255b = function() { return handleError(function () {
         const ret = module.require;
         return addHeapObject(ret);
     }, arguments) };
@@ -480,6 +481,14 @@ function __wbg_get_imports() {
         const ret = getObject(arg0).call(getObject(arg1), getObject(arg2));
         return addHeapObject(ret);
     }, arguments) };
+    imports.wbg.__wbg_msCrypto_eb05e62b530a1508 = function(arg0) {
+        const ret = getObject(arg0).msCrypto;
+        return addHeapObject(ret);
+    };
+    imports.wbg.__wbg_newwithlength_e9b4878cebadb3d3 = function(arg0) {
+        const ret = new Uint8Array(arg0 >>> 0);
+        return addHeapObject(ret);
+    };
     imports.wbg.__wbindgen_memory = function() {
         const ret = wasm.memory;
         return addHeapObject(ret);
@@ -492,14 +501,14 @@ function __wbg_get_imports() {
         const ret = new Uint8Array(getObject(arg0), arg1 >>> 0, arg2 >>> 0);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbg_randomFillSync_290977693942bf03 = function() { return handleError(function (arg0, arg1) {
+    imports.wbg.__wbg_randomFillSync_5c9c955aa56b6049 = function() { return handleError(function (arg0, arg1) {
         getObject(arg0).randomFillSync(takeObject(arg1));
     }, arguments) };
     imports.wbg.__wbg_subarray_a1f73cd4b5b42fe1 = function(arg0, arg1, arg2) {
         const ret = getObject(arg0).subarray(arg1 >>> 0, arg2 >>> 0);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbg_getRandomValues_260cc23a41afad9a = function() { return handleError(function (arg0, arg1) {
+    imports.wbg.__wbg_getRandomValues_3aa56aa6edec874c = function() { return handleError(function (arg0, arg1) {
         getObject(arg0).getRandomValues(getObject(arg1));
     }, arguments) };
     imports.wbg.__wbg_new_63b92bc8671ed464 = function(arg0) {

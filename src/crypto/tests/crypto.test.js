@@ -3,25 +3,22 @@ import assert from "node:assert/strict";
 import { Crypto } from "kestrel-crypto";
 import { toHex, fromHex, toUtf8Bytes, fromUtf8Bytes } from "kestrel-crypto/utils";
 
-let crypto = null;
-
-before(async () => {
-    crypto = await Crypto.createInstance();
-});
-
-test("scrypt", () => {
+test("scrypt", async () => {
+    const crypto = await Crypto.createInstance();
     const passBytes = toUtf8Bytes("hackme");
     const saltBytes = toUtf8Bytes("yellowsubmarine.");
     const res = crypto.scrypt(passBytes, saltBytes, 32768, 8, 1, 32);
     assert.equal(toHex(res), "3ebb9ac0d1da595f755407fe8fc246fe67fe6075730fc6e853351c2834bd6157");
 });
 
-test("secureRandom", () => {
+test("secureRandom", async () => {
+    const crypto = await Crypto.createInstance();
     const bytes = crypto.secureRandom(32);
     assert.equal(bytes.length, 32);
 });
 
-test("x25519", () => {
+test("x25519", async () => {
+    const crypto = await Crypto.createInstance();
     const alicePublic = fromHex("8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a");
     const alicePrivate = fromHex("77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a");
     const bobPublic = fromHex("de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f");
@@ -33,7 +30,8 @@ test("x25519", () => {
     assert.deepEqual(aliceToBob, expectedShared);
 });
 
-test("x25519DerivePublic", () => {
+test("x25519DerivePublic", async () => {
+    const crypto = await Crypto.createInstance();
     const alicePublic = fromHex("8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a");
     const alicePrivate = fromHex("77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a");
     const derivedPublic = crypto.x25519DerivePublic(alicePrivate);
@@ -52,7 +50,8 @@ test("encoders", () => {
     assert.equal(strOut, strInput);
 });
 
-test("decrypt", () => {
+test("decrypt", async () => {
+    const crypto = await Crypto.createInstance();
     const plaintext = toUtf8Bytes("Hello, World!");
     const nonce = fromHex("b21237d55cce2711e789db3b");
     const aad = new Uint8Array(0);
@@ -76,7 +75,8 @@ function KeyData() {
     this.bobPublic = fromHex("98459724b39e6b9e90b60d214df2887093e224b163714e07e527a4d37edc2d03");
 }
 
-test("passEncrypt", () => {
+test("passEncrypt", async () => {
+    const crypto = await Crypto.createInstance();
     const encryptInput = new EncryptInput();
     const expectedHash = fromHex("bef8d086931a2be31875839474b455fb6a9bfa0fbb6669dbeb8a86e51be0c9bd");
     const ciphertext = crypto.passEncrypt(encryptInput.plaintext, encryptInput.pass, encryptInput.salt);
@@ -85,37 +85,51 @@ test("passEncrypt", () => {
     assert.deepEqual(gotHash, expectedHash);
 });
 
-test("passDecrypt", () => {
+test("passDecrypt", async () => {
+    const crypto = await Crypto.createInstance();
     const encryptInput = new EncryptInput();
     const ciphertext = crypto.passEncrypt(encryptInput.plaintext, encryptInput.pass, encryptInput.salt);
     const plaintext = crypto.passDecrypt(ciphertext, encryptInput.pass);
     assert.deepEqual(plaintext, encryptInput.plaintext);
 });
 
-function keyEncryptUtil() {
+async function keyEncryptUtil() {
+    const crypto = await Crypto.createInstance();
     const keyData = new KeyData();
     const ephemPrivate = fromHex("fdbc28d8f4c2a97013e460836cece7a4bdf59df0cb4b3a185146d13615884f38");
+    const ephemPublic = crypto.x25519DerivePublic(ephemPrivate);
     const payloadKey = fromHex("a9f9ddef54d0432ec067b75aef26c3db5419ade3b016339743ca1812d89188b2");
     const plaintext = toUtf8Bytes("Hello, world!");
-    const ciphertext = crypto.keyEncrypt(plaintext, keyData.alicePrivate, keyData.bobPublic, ephemPrivate, payloadKey);
+    const ciphertext = crypto.keyEncrypt(
+        plaintext,
+        keyData.alicePrivate,
+        keyData.alicePublic,
+        keyData.bobPublic,
+        ephemPrivate,
+        ephemPublic,
+        payloadKey
+    );
     return ciphertext;
 }
 
-test("keyEncrypt", () => {
+test("keyEncrypt", async () => {
+    const crypto = await Crypto.createInstance();
     const expectedHash = fromHex("3f3b97112e768a8fa7cce7ce90c166b6ea2de51d8868a037dfd57094ea6e77f1");
-    const ciphertext = keyEncryptUtil();
+    const ciphertext = await keyEncryptUtil();
     const gotHash = crypto.sha256(ciphertext);
     assert.equal(ciphertext.length, 177);
     assert.deepEqual(gotHash, expectedHash);
 });
 
-test("keyDecrypt", () => {
+test("keyDecrypt", async () => {
+    const crypto = await Crypto.createInstance();
     const expectedPlaintext = toUtf8Bytes("Hello, world!");
     const keyData = new KeyData();
     const expectedSender = keyData.alicePublic;
     const recipient = keyData.bobPrivate;
-    const ciphertext = keyEncryptUtil();
-    const { plaintext, publicKey } = crypto.keyDecrypt(ciphertext, recipient);
+    const recipientPublic = keyData.bobPublic;
+    const ciphertext = await keyEncryptUtil();
+    const { plaintext, publicKey } = crypto.keyDecrypt(ciphertext, recipient, recipientPublic);
     assert.deepEqual(plaintext, expectedPlaintext);
     assert.deepEqual(publicKey, expectedSender);
 });

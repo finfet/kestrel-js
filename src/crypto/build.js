@@ -3,14 +3,9 @@ import * as esbuild from "esbuild";
 
 async function build() {
     let watchMode = false;
-    let minify = false;
-    let sourcemap = true;
     for (const arg of process.argv) {
         if (arg == "--watch") {
             watchMode = true;
-        } else if (arg == "--prod") {
-            minify = true;
-            sourcemap = false;
         }
     }
 
@@ -23,8 +18,6 @@ async function build() {
         outbase: "src",
         target: "esnext",
         format: "esm",
-        minify: minify,
-        sourcemap: sourcemap,
         loader: {
             ".wasm": "base64"
         }
