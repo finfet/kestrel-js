@@ -219,8 +219,9 @@ export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEnc
             return;
         }
 
-        const b64PrivateKey = getPrivateKey(contacts, senderName);
-        const b64PublicKey = getPublicKey(contacts, recipientName);
+        const senderB64PrivateKey = getPrivateKey(contacts, senderName);
+        const senderB64PublicKey = getPublicKey(contacts, senderName);
+        const recipientB64PublicKey = getPublicKey(contacts, recipientName);
 
         setAnim({ start: true, met: false });
         setHasError(false);
@@ -229,7 +230,7 @@ export function KeyEncryptPage({ sendMessage, contacts, keyEncryptResult, keyEnc
             setAnim({ start: false, met: true });
         }, ANIMATION_DURATION);
 
-        sendMessage(workerMsgActions.keyEncrypt, [plaintextFile, b64PrivateKey, toUtf8Bytes(password), b64PublicKey]);
+        sendMessage(workerMsgActions.keyEncrypt, [plaintextFile, senderB64PrivateKey, senderB64PublicKey, toUtf8Bytes(password), recipientB64PublicKey]);
     }
 
     function doneClick() {

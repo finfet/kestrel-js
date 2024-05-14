@@ -239,7 +239,6 @@ export default function App() {
             hashInitRef.current = window.location.hash;
         }
         currentHashRef.current = state.currentHash;
-        console.log("currentHashRef set:", currentHashRef.current);
         window.location.hash = state.currentHash;
     }, [state.currentHash]);
 

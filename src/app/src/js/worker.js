@@ -21,10 +21,10 @@ self.onmessage = (e) => {
             passDecrypt(msg.args[0], msg.args[1]);
             break;
         case workerMsgActions.keyEncrypt:
-            keyEncrypt(msg.args[0], msg.args[1], msg.args[2], msg.args[3]);
+            keyEncrypt(msg.args[0], msg.args[1], msg.args[2], msg.args[3], msg.args[4]);
             break;
         case workerMsgActions.keyDecrypt:
-            keyDecrypt(msg.args[0], msg.args[1], msg.args[2]);
+            keyDecrypt(msg.args[0], msg.args[1], msg.args[2], msg.args[3]);
             break;
         case workerMsgActions.generateKey:
             generateKey(msg.args[0]);
@@ -128,7 +128,7 @@ function attemptUnlock(crypto, b64PriavateKey, password, action) {
     };
 }
 
-async function keyEncrypt(inputFile, b64SenderPrivate, senderPass, b64RecipientPublic) {
+async function keyEncrypt(inputFile, b64SenderPrivate, b64SenderPublic, senderPass, b64RecipientPublic) {
     const crypto = await Crypto.createInstance();
     const filename = `${inputFile.name}.ktl`;
     const buffer = await inputFile.arrayBuffer();
@@ -142,8 +142,9 @@ async function keyEncrypt(inputFile, b64SenderPrivate, senderPass, b64RecipientP
     const senderPrivate = unlockAttempt.privateKey;
 
     try {
+        const senderPublic = decodePublicKey(crypto, b64SenderPublic);
         const recipientPublic = decodePublicKey(crypto, b64RecipientPublic);
-        const ciphertext = crypto.keyEncrypt(plaintext, senderPrivate, recipientPublic);
+        const ciphertext = crypto.keyEncrypt(plaintext, senderPrivate, senderPublic, recipientPublic);
         const blob = new Blob([ciphertext], { type: "application/octet-stream" });
         const url = URL.createObjectURL(blob);
         const message = {
@@ -156,7 +157,7 @@ async function keyEncrypt(inputFile, b64SenderPrivate, senderPass, b64RecipientP
     }
 }
 
-async function keyDecrypt(inputFile, b64RecipientPrivate, recipientPass) {
+async function keyDecrypt(inputFile, b64RecipientPrivate, b64RecipientPublic, recipientPass) {
     const crypto = await Crypto.createInstance();
     const filename = stripExtension(inputFile.name);
     const buffer = await inputFile.arrayBuffer();
@@ -167,11 +168,11 @@ async function keyDecrypt(inputFile, b64RecipientPrivate, recipientPass) {
         self.postMessage(unlockAttempt.exception);
         return;
     }
-
     const recipientPrivate = unlockAttempt.privateKey;
 
     try {
-        const { plaintext, publicKey } = crypto.keyDecrypt(ciphertext, recipientPrivate);
+        const recipientPublic = decodePublicKey(crypto, b64RecipientPublic);
+        const { plaintext, publicKey } = crypto.keyDecrypt(ciphertext, recipientPrivate, recipientPublic);
         const b64SenderPublic = encodePublicKey(crypto, publicKey);
         const blob = new Blob([plaintext], { type: "application/octet-stream" });
         const url = URL.createObjectURL(blob);

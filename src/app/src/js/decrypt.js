@@ -5,7 +5,7 @@ import { workerMsgActions } from "./state.js";
 import {
     ResultInfo, MessageInfo, ANIMATION_DURATION,
     createNameSelect, SelectBox, getPrivateKey,
-    s100MiB, BackButton
+    getPublicKey, s100MiB, BackButton
 } from "./common.js";
 
 export function PassDecryptPage({ sendMessage, passDecryptResult, passDecryptLoading, reloadWorker, backClick }) {
@@ -237,6 +237,7 @@ export function KeyDecryptPage({ sendMessage, contacts, keyDecryptResult, keyDec
         }
 
         const b64RecipientPrivate = getPrivateKey(contacts, recipientName);
+        const b64RecipientPublic = getPublicKey(contacts, recipientName);
 
         setAnim({ start: true, met: false });
         setHasError(false);
@@ -245,7 +246,7 @@ export function KeyDecryptPage({ sendMessage, contacts, keyDecryptResult, keyDec
             setAnim({ start: false, met: true });
         }, ANIMATION_DURATION);
 
-        sendMessage(workerMsgActions.keyDecrypt, [ciphertextFile, b64RecipientPrivate, toUtf8Bytes(password)]);
+        sendMessage(workerMsgActions.keyDecrypt, [ciphertextFile, b64RecipientPrivate, b64RecipientPublic, toUtf8Bytes(password)]);
     }
 
     function doneClick() {
