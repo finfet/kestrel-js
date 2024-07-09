@@ -1,6 +1,6 @@
 {
     "name": "kestrel-web",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Kestrel - Easy File Encryption",
     "type": "module",
     "private": true,
@@ -27,11 +27,11 @@
     "author": "Kyle Schreiber <kyle@80x24.net>",
     "license": "MIT",
     "dependencies": {
-        "kestrel-crypto": "0.1.0",
+        "kestrel-crypto": "1.0.0",
         "react": "^18.3.1",
         "react-dom": "^18.3.1"
     },
     "devDependencies": {
-        "esbuild": "0.21.2"
+        "esbuild": "0.23.0"
     }
 }

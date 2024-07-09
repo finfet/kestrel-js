@@ -522,7 +522,7 @@ export default function App() {
         <div className="content">
             {selectedPage}
         </div>
-        <div className="footer">Kestrel v0.1.0</div>
+        <div className="footer">Kestrel v1.0.0</div>
         </>
     );
 }
