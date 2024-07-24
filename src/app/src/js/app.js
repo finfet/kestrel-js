@@ -1,5 +1,7 @@
 import { useEffect, useRef, useReducer } from "react";
 
+import { version as appVersion } from "../../package.json";
+
 import {
     reducer, initialState, appNavStates,
     encryptNavStates, decryptNavStates, contactsNavStates
@@ -508,7 +510,7 @@ export default function App() {
         <div className="content">
             {selectedPage}
         </div>
-        <div className="footer">Kestrel v1.0.0</div>
+        <div className="footer">Kestrel v{appVersion}</div>
         </>
     );
 }
